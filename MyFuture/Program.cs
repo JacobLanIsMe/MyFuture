@@ -1,6 +1,8 @@
 using MyFuture.BackgroundServices;
-using MyFuture.Interfaces;
-using MyFuture.Services;
+using Repositories.Interfaces;
+using Repositories.Repositories;
+using Services.Interfaces;
+using Services.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IStockService, StockService>();
+builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddMemoryCache();
 builder.Services.AddHostedService<GetJumpEmptyStocks>();
 var app = builder.Build();
