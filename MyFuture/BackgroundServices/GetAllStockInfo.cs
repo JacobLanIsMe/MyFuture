@@ -6,19 +6,19 @@ namespace MyFuture.BackgroundServices
 {
     public class GetAllStockInfo : BackgroundService
     {
-        private readonly ILogger<GetAllStockInfo> _logger;
+        //private readonly ILogger<GetAllStockInfo> _logger;
         private readonly IServiceProvider _serviceProvider;
-        public GetAllStockInfo(ILogger<GetAllStockInfo> logger, IServiceProvider serviceProvider)
+        public GetAllStockInfo(/*ILogger<GetAllStockInfo> logger, */IServiceProvider serviceProvider)
         {
-            _logger = logger;
+            //_logger = logger;
             _serviceProvider = serviceProvider;
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                DateTime start = DateTime.Now;
-                _logger.LogInformation($"Start {start.ToString("d")}");
+                //DateTime start = DateTime.Now;
+                //_logger.LogInformation($"Start {start.ToString("d")}");
                 try
                 {
                     List<string> stockIds = new List<string>();
@@ -38,11 +38,11 @@ namespace MyFuture.BackgroundServices
                             try
                             {
                                 await stockService.SetStockInfoCache(i);
-                                _logger.LogInformation($"Extract {i} success");
+                                //_logger.LogInformation($"Extract {i} success");
                             }
                             catch (Exception ex)
                             {
-                                _logger.LogInformation($"Extract {i} fail, {ex.Message}");
+                                //_logger.LogInformation($"Extract {i} fail, {ex.Message}");
                             }
                         }
                     }
@@ -52,11 +52,11 @@ namespace MyFuture.BackgroundServices
                 {
 
                 }
-                DateTime end = DateTime.Now;
-                var period = (end - start).ToString("c");
-                _logger.LogInformation($"End {end}");
-                _logger.LogInformation($"Period {period}");
-                await Task.Delay(TimeSpan.FromMinutes(15));
+                //DateTime end = DateTime.Now;
+                //var period = (end - start).ToString("c");
+                //_logger.LogInformation($"End {end}");
+                //_logger.LogInformation($"Period {period}");
+                await Task.Delay(TimeSpan.FromMinutes(60));
             }
         }
     }
