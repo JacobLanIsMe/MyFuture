@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using MyFuture.Interfaces;
-using MyFuture.Models;
+using Models.Models;
+using Services.Interfaces;
 
 namespace MyFuture.Controllers
 {
@@ -20,6 +20,7 @@ namespace MyFuture.Controllers
             ApiDataResponseModel result = new ApiDataResponseModel();
             try
             {
+                result.Data = _stockService.GetJumpEmptyStocks();
                 result.SetSuccess();
             }
             catch (Exception ex)

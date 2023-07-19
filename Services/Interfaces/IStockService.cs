@@ -9,6 +9,7 @@ namespace Services.Interfaces
 {
     public interface IStockService
     {
-        Task<StockInfoModel> SetStockInfoCache(string stockId);
+        List<StockInfoModel> GetJumpEmptyStocks();
+        Task SetStockInfoCache(string stockId);
     }
 }

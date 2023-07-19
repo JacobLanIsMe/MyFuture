@@ -15,7 +15,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IStockService, StockService>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddMemoryCache();
-builder.Services.AddHostedService<GetJumpEmptyStocks>();
+builder.Services.AddHostedService<GetAllStockInfo>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
