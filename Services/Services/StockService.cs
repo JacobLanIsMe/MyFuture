@@ -30,6 +30,11 @@ namespace Services.Services
                 if (_memoryCache.TryGetValue<StockInfoModel>(i, out StockInfoModel? stock) && stock != null && stock.StockDetails != null && stock.StockDetails.Count > 5)
                 {
                     List<StockDetailModel> stockDetails = stock.StockDetails.OrderByDescending(x => x.t).ToList();
+                    var averageVolumn = stockDetails.Take(5).Select(x=>x.v).Average();
+                    if (averageVolumn < 500)
+                    {
+                        continue;
+                    }
                     for (int j = 1; j < 10; j++)
                     {
                         if (stockDetails[j].l >= stockDetails[j + 1].h)
@@ -52,7 +57,6 @@ namespace Services.Services
                     }
                 }
             }
-
             return result;
         }
 
