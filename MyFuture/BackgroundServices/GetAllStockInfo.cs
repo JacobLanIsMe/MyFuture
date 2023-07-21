@@ -6,7 +6,7 @@ namespace MyFuture.BackgroundServices
 {
     public class GetAllStockInfo : BackgroundService
     {
-        //private readonly ILogger<GetAllStockInfo> _logger;
+        private readonly ILogger<GetAllStockInfo> _logger;
         private readonly IServiceProvider _serviceProvider;
         public GetAllStockInfo(/*ILogger<GetAllStockInfo> logger, */IServiceProvider serviceProvider)
         {
