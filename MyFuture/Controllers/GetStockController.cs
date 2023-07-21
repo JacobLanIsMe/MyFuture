@@ -29,5 +29,20 @@ namespace MyFuture.Controllers
             }
             return result;
         }
+        [HttpGet("GetBullishPullbackStocks")]
+        public async Task<ApiDataResponseModel> GetBullishPullbackStocks()
+        {
+            ApiDataResponseModel result = new ApiDataResponseModel();
+            try
+            {
+                result.Data = _stockService.GetBullishPullbackStocks();
+                result.SetSuccess();
+            }
+            catch (Exception ex)
+            {
+                result.SetError(ex.Message, ex.ToString());
+            }
+            return result;
+        }
     }
 }

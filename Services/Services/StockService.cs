@@ -21,7 +21,17 @@ namespace Services.Services
             List<StockInfoModel> selectedStocks = GetJumpEmptyStocksFromCache(stockIds);
             return selectedStocks;
         }
-
+        public List<StockInfoModel> GetBullishPullbackStocks()
+        {
+            List<string> stockIds = _stockRepository.GetStockIds();
+            List<StockInfoModel> selectedStocks = GetBullishPullbackStocksFromCache(stockIds);
+            return selectedStocks;
+        }
+        private List<StockInfoModel> GetBullishPullbackStocksFromCache(List<string> stockIds)
+        {
+            List<StockInfoModel> result = new List<StockInfoModel>();
+            return result;
+        }
         private List<StockInfoModel> GetJumpEmptyStocksFromCache(List<string> stockIds)
         {
             List<StockInfoModel> result = new List<StockInfoModel>();
