@@ -80,7 +80,7 @@ namespace Services.Services
                 {
                     var periodStocks = stockDetails.Take(j).ToList();
                     var topClose = periodStocks.Select(x => x.c).Max();
-                    var lowClose = periodStocks.Select(x => x.l).Min();
+                    var lowClose = periodStocks.Select(x => x.c).Min();
                     if (topClose <= stockDetails[j].h && lowClose >= stockDetails[j + 1].h)
                     {
                         return true;
