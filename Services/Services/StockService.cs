@@ -39,11 +39,20 @@ namespace Services.Services
                     {
                         List<StockDetailModel> stockDetails = stock.StockDetails.OrderByDescending(x => x.t).ToList();
                         var mv5 = stockDetails.Take(5).Select(x => x.v).Average();
+                        #region 取得季線乖離率
+                        double bias60 = default;
+                        if (stockDetails.Count >= 60)
+                        {
+                            double ma60 = stockDetails.Take(60).Select(x => x.c).Average();
+                            bias60 = stockDetails.First().c / ma60;
+                        }
+                        #endregion
                         bool isMatchStrategy = false;
-                        if (mv5 >= 500)
+                        if (mv5 >= 500 && bias60 != default && bias60 <= 1.1)
                         {
                             isMatchStrategy = strategy(stockDetails);
                         }
+
                         if (isMatchStrategy)
                         {
                             StockInfoModel model = new StockInfoModel
@@ -70,10 +79,6 @@ namespace Services.Services
         #region JumpEmpty
         private bool JumpEmptyStrategy(List<StockDetailModel> stockDetails)
         {
-            if (stockDetails.Count <= 5)
-            {
-                return false;
-            }
             for (int j = 1; j < 10; j++)
             {
                 if (stockDetails[j].l >= stockDetails[j + 1].h)
@@ -93,10 +98,6 @@ namespace Services.Services
         #region BullishPullback
         private bool BullishPullbackStrategy(List<StockDetailModel> stockDetails)
         {
-            if (stockDetails.Count < 60)
-            {
-                return false;
-            }
             var last40Days = stockDetails.Take(40).ToList();
             double topClose = last40Days.Select(x => x.c).Max(); // 找到近40天的最高收盤價
             int topDayIndex = last40Days.FindIndex(x => x.c == topClose); // 找到近40天的最高收盤價的位置
