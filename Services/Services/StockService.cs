@@ -48,7 +48,7 @@ namespace Services.Services
                         }
                         #endregion
                         bool isMatchStrategy = false;
-                        if (mv5 >= 500 && bias60 != default && bias60 <= 1.1)
+                        if (mv5 >= 200 && bias60 != default && bias60 <= 1.1)
                         {
                             isMatchStrategy = strategy(stockDetails);
                         }
@@ -105,7 +105,9 @@ namespace Services.Services
             int lastTopDayIndex = stockDetails.Skip(topDayIndex + 1).Take(20).ToList().FindIndex(x => x.c == lastTopClose); // 找出第二個峰值的位置
             double bottomClose = stockDetails.Take(topDayIndex).Select(x => x.c).Min(); // 找到最近的底部收盤價
             double lastBottomClose = stockDetails.Skip(topDayIndex + 1).Take(lastTopDayIndex).Select(x => x.c).Min(); // 找出兩個峰值間的最低值
-            if (topClose > lastTopClose && bottomClose >= lastBottomClose)
+            var mh5 = stockDetails.Take(5).Select(x => x.c).Max(); // 找出最近五日收盤價的最高點
+            var ml5 = stockDetails.Take(5).Select(x => x.c).Min(); // 找出最近五日收盤價的最低點
+            if (topClose > lastTopClose && bottomClose >= lastBottomClose && mh5/ml5 <= 1.02)
             {
                 return true;
             }
