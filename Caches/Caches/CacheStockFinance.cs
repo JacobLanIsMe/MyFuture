@@ -43,7 +43,7 @@ namespace Caches.Caches
                             var quarterSelector = i.QuerySelector("div>div>div");
                             if (quarterSelector == null)
                             {
-                                Console.WriteLine($"{stockId}, error");
+                                Console.WriteLine($"{stockId}, {i.InnerHtml}, error");
                                 continue;
                             }
                             var quarter = quarterSelector.InnerHtml;
@@ -59,7 +59,7 @@ namespace Caches.Caches
                                 };
                                 details.Add(model);
                             };
-
+                            
                         }
                         StockFinanceInfoModel stock = new StockFinanceInfoModel();
                         stock.Id = stockId;

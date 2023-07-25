@@ -124,9 +124,10 @@ namespace Services.Services
                     if (_memoryCache.TryGetValue<StockFinanceInfoModel>($"Finance{i}", out StockFinanceInfoModel? stock) && stock != null && stock.StockDetails != null)
                     {
                         var details = stock.StockDetails;
+                        var isNegativeEps = details.Take(8).Any(x => x.eps < 0);
                         var firstYoy = details[0].yoy;
                         var secondYoy = details[1].yoy;
-                        if (firstYoy > 0 && secondYoy > 0)
+                        if (!isNegativeEps && firstYoy > 0 && secondYoy > 0)
                         {
                             result.Add(stock);
                         }
