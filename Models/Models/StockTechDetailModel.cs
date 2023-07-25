@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Models.Models
 {
-    public class StockDetailModel
+    public class StockTechDetailModel
     {
         public int t { get; set; }
         public double o { get; set; }

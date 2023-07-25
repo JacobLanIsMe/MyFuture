@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace Models.Models
 {
-    public class StockInfoModel
+    public class StockBaseModel
     {
         public string? Id { get; set; }
         public string? Name { get; set; }
-        public List<StockDetailModel>? StockDetails { get; set; }
     }
 }

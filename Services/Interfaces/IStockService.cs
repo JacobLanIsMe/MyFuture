@@ -9,7 +9,8 @@ namespace Services.Interfaces
 {
     public interface IStockService
     {
-        List<StockInfoModel> GetJumpEmptyStocks();
-        List<StockInfoModel> GetBullishPullbackStocks();
+        List<StockTechInfoModel> GetJumpEmptyStocks();
+        List<StockTechInfoModel> GetBullishPullbackStocks();
+        List<StockFinanceInfoModel> GetEpsIncreasingStocks();
     }
 }

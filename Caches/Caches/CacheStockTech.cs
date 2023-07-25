@@ -2,45 +2,56 @@
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
 using Caches.Interfaces;
+using Repositories.Interfaces;
 
 namespace Caches.Caches
 {
     public class CacheStockTech : ICacheStockTech
     {
         private readonly IMemoryCache _memoryCache;
-        public CacheStockTech(IMemoryCache memoryCache)
+        private readonly IStockRepository _stockRepository;
+        public CacheStockTech(IMemoryCache memoryCache, IStockRepository stockRepository)
         {
             _memoryCache = memoryCache;
+            _stockRepository = stockRepository;
         }
-        public async Task SetStockTechCache(string stockId)
+        public async Task SetStockTechCache()
         {
-            HttpClient client = new HttpClient();
-            string url = $"https://tw.quote.finance.yahoo.net/quote/q?type=ta&perd=d&mkt=10&sym={stockId}&v=1&callback=jQuery111306311117094962886_1574862886629&_=1574862886630";
-            var responseMsg = await client.GetAsync(url);
-            string? detail = null;
-            string? name = null;
-            StockInfoModel stock = new StockInfoModel();
-            List<StockDetailModel> stockDetails = new List<StockDetailModel>();
-
-            if (responseMsg.IsSuccessStatusCode)
+            List<string> stockIds = _stockRepository.GetStockIds(); // 取得所有的 stockId
+            #region 取得所有的 StockInfo，並寫入 Cache
+            foreach (var stockId in stockIds)
             {
-                var data = await responseMsg.Content.ReadAsStringAsync();
-                detail = data.Split("\"ta\":")[1].Split(",\"ex\"")[0];
-                name = data.Split("\"name\":\"")[1].Split('\"')[0];
-            }
-            stockDetails = JsonSerializer.Deserialize<List<StockDetailModel>>(detail);
-            stock.StockDetails = stockDetails;
-            stock.Name = name;
-            stock.Id = stockId;
-            if (!string.IsNullOrEmpty(name))
-            {
-                TimeSpan expirationTimeSpan = TimeSpan.FromDays(1);
-                MemoryCacheEntryOptions options = new MemoryCacheEntryOptions
+                try
                 {
-                    AbsoluteExpirationRelativeToNow = expirationTimeSpan,
-                };
-                _memoryCache.Set(stockId, stock, options);
+                    HttpClient client = new HttpClient();
+                    string url = $"https://tw.quote.finance.yahoo.net/quote/q?type=ta&perd=d&mkt=10&sym={stockId}&v=1&callback=jQuery111306311117094962886_1574862886629&_=1574862886630";
+                    var responseMsg = await client.GetAsync(url);
+                    string? detail = null;
+                    string? name = null;
+                    StockTechInfoModel stock = new StockTechInfoModel();
+                    List<StockTechDetailModel> stockDetails = new List<StockTechDetailModel>();
+
+                    if (responseMsg.IsSuccessStatusCode)
+                    {
+                        var data = await responseMsg.Content.ReadAsStringAsync();
+                        detail = data.Split("\"ta\":")[1].Split(",\"ex\"")[0];
+                        name = data.Split("\"name\":\"")[1].Split('\"')[0];
+                    }
+                    stockDetails = JsonSerializer.Deserialize<List<StockTechDetailModel>>(detail);
+                    stock.StockDetails = stockDetails;
+                    stock.Name = name;
+                    stock.Id = stockId;
+                    if (!string.IsNullOrEmpty(name))
+                    {
+                        _memoryCache.Set($"Tech{stockId}", stock);
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                }
             }
+            #endregion
         }
     }
 }

@@ -17,8 +17,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IStockService, StockService>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddScoped<ICacheStockTech, CacheStockTech>();
+builder.Services.AddScoped<ICacheStockFinance, CacheStockFinance>();
 builder.Services.AddMemoryCache();
-builder.Services.AddHostedService<GetStockTech>();
+builder.Services.AddHostedService<BackgroundStockTech>();
+builder.Services.AddHostedService<BackgroundStockFinance>();
 
 #region CORS
 var allowSpecificOrigins = "allowSpecificOrigins";

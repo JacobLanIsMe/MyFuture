@@ -15,27 +15,27 @@ namespace Services.Services
             _memoryCache = memoryCache;
             _stockRepository = stockRepository;
         }
-        public List<StockInfoModel> GetJumpEmptyStocks()
+        public List<StockTechInfoModel> GetJumpEmptyStocks()
         {
-            List<StockInfoModel> selectedStocks = GetStockBySpecificStrategy(JumpEmptyStrategy);
+            List<StockTechInfoModel> selectedStocks = GetStockBySpecificStrategy(JumpEmptyStrategy);
             return selectedStocks;
         }
-        public List<StockInfoModel> GetBullishPullbackStocks()
+        public List<StockTechInfoModel> GetBullishPullbackStocks()
         {
-            List<StockInfoModel> selectedStocks = GetStockBySpecificStrategy(BullishPullbackStrategy);
+            List<StockTechInfoModel> selectedStocks = GetStockBySpecificStrategy(BullishPullbackStrategy);
             return selectedStocks;
         }
-        private List<StockInfoModel> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy)
+        private List<StockTechInfoModel> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy)
         {
             List<string> stockIds = _stockRepository.GetStockIds();
-            List<StockInfoModel> result = new List<StockInfoModel>();
+            List<StockTechInfoModel> result = new List<StockTechInfoModel>();
             foreach (var i in stockIds)
             {
                 try
                 {
-                    if (_memoryCache.TryGetValue<StockInfoModel>(i, out StockInfoModel? stock) && stock != null && stock.StockDetails != null)
+                    if (_memoryCache.TryGetValue<StockTechInfoModel>($"Tech{i}", out StockTechInfoModel? stock) && stock != null && stock.StockDetails != null)
                     {
-                        List<StockDetailModel> stockDetails = stock.StockDetails.OrderByDescending(x => x.t).ToList();
+                        List<StockTechDetailModel> stockDetails = stock.StockDetails.OrderByDescending(x => x.t).ToList();
                         var mv5 = stockDetails.Take(5).Select(x => x.v).Average();
                         #region 取得季線乖離率
                         double bias60 = default;
@@ -53,7 +53,7 @@ namespace Services.Services
 
                         if (isMatchStrategy)
                         {
-                            StockInfoModel model = new StockInfoModel
+                            StockTechInfoModel model = new StockTechInfoModel
                             {
                                 Id = stock.Id,
                                 Name = stock.Name,
@@ -73,9 +73,9 @@ namespace Services.Services
 
 
 
-        private delegate bool GetStocksBySpecificStrategy(List<StockDetailModel> stockDetails);
+        private delegate bool GetStocksBySpecificStrategy(List<StockTechDetailModel> stockDetails);
         #region JumpEmpty
-        private bool JumpEmptyStrategy(List<StockDetailModel> stockDetails)
+        private bool JumpEmptyStrategy(List<StockTechDetailModel> stockDetails)
         {
             for (int j = 1; j < 10; j++)
             {
@@ -94,7 +94,7 @@ namespace Services.Services
         }
         #endregion
         #region BullishPullback
-        private bool BullishPullbackStrategy(List<StockDetailModel> stockDetails)
+        private bool BullishPullbackStrategy(List<StockTechDetailModel> stockDetails)
         {
             var last40Days = stockDetails.Take(40).ToList();
             double topClose = last40Days.Select(x => x.c).Max(); // 找到近40天的最高收盤價
@@ -113,8 +113,34 @@ namespace Services.Services
         }
         #endregion
 
+        public List<StockFinanceInfoModel> GetEpsIncreasingStocks()
+        {
+            List<string> stockIds = _stockRepository.GetStockIds();
+            List<StockFinanceInfoModel> result = new List<StockFinanceInfoModel>();
+            foreach (var i in stockIds)
+            {
+                try
+                {
+                    if (_memoryCache.TryGetValue<StockFinanceInfoModel>($"Finance{i}", out StockFinanceInfoModel? stock) && stock != null && stock.StockDetails != null)
+                    {
+                        var details = stock.StockDetails;
+                        var firstYoy = details[0].yoy;
+                        var secondYoy = details[1].yoy;
+                        if (firstYoy > 0 && secondYoy > 0)
+                        {
+                            result.Add(stock);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
 
-        
+                }
+            }
+            return result;
+        }
+
+
 
     }
 }

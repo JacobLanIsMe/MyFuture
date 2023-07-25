@@ -2,6 +2,6 @@
 {
     public interface ICacheStockTech
     {
-        Task SetStockTechCache(string stockId);
+        Task SetStockTechCache();
     }
 }
