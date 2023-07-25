@@ -1,14 +1,13 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using Caches.Interfaces;
 using Repositories.Interfaces;
-using Services.Interfaces;
 
 namespace MyFuture.BackgroundServices
 {
-    public class GetAllStockInfo : BackgroundService
+    public class GetStockTech : BackgroundService
     {
-        private readonly ILogger<GetAllStockInfo> _logger;
+        //private readonly ILogger<GetStockTech> _logger;
         private readonly IServiceProvider _serviceProvider;
-        public GetAllStockInfo(/*ILogger<GetAllStockInfo> logger, */IServiceProvider serviceProvider)
+        public GetStockTech(/*ILogger<GetAllStockInfo> logger, */IServiceProvider serviceProvider)
         {
             //_logger = logger;
             _serviceProvider = serviceProvider;
@@ -32,12 +31,12 @@ namespace MyFuture.BackgroundServices
                     #region 取得所有的 StockInfo，並寫入 Cache
                     using (var scope = _serviceProvider.CreateScope())
                     {
-                        var stockService = scope.ServiceProvider.GetRequiredService<IStockService>();
+                        var cacheStockTech = scope.ServiceProvider.GetRequiredService<ICacheStockTech>();
                         foreach (var i in stockIds)
                         {
                             try
                             {
-                                await stockService.SetStockInfoCache(i);
+                                await cacheStockTech.SetStockTechCache(i);
                                 //_logger.LogInformation($"Extract {i} success");
                             }
                             catch (Exception ex)

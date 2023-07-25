@@ -1,3 +1,5 @@
+using Caches.Caches;
+using Caches.Interfaces;
 using MyFuture.BackgroundServices;
 using Repositories.Interfaces;
 using Repositories.Repositories;
@@ -14,8 +16,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IStockService, StockService>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
+builder.Services.AddScoped<ICacheStockTech, CacheStockTech>();
 builder.Services.AddMemoryCache();
-builder.Services.AddHostedService<GetAllStockInfo>();
+builder.Services.AddHostedService<GetStockTech>();
 
 #region CORS
 var allowSpecificOrigins = "allowSpecificOrigins";

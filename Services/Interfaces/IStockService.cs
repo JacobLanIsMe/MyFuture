@@ -11,6 +11,5 @@ namespace Services.Interfaces
     {
         List<StockInfoModel> GetJumpEmptyStocks();
         List<StockInfoModel> GetBullishPullbackStocks();
-        Task SetStockInfoCache(string stockId);
     }
 }
