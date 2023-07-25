@@ -36,17 +36,11 @@ namespace Caches.Caches
                         HtmlParser parser = new HtmlParser();
                         var document = await parser.ParseDocumentAsync(response);
                         var name = document.QuerySelector("div#main-0-QuoteHeader-Proxy>div>div>h1").InnerHtml;
-                        var data = document.QuerySelectorAll("div.table-body-wrapper li");
+                        var data = document.QuerySelectorAll("div#layout-col1 div.table-body-wrapper li");
                         List<StockFinanceDetailModel> details = new List<StockFinanceDetailModel>();
                         foreach (var i in data)
                         {
-                            var quarterSelector = i.QuerySelector("div>div>div");
-                            if (quarterSelector == null)
-                            {
-                                Console.WriteLine($"{stockId}, {i.InnerHtml}, error");
-                                continue;
-                            }
-                            var quarter = quarterSelector.InnerHtml;
+                            var quarter = i.QuerySelector("div>div>div").InnerHtml;
                             var finance = i.QuerySelectorAll("span");
                             if (double.TryParse(finance[0].InnerHtml, out double eps) && double.TryParse(finance[1].InnerHtml.TrimEnd('%'), out double qoq) && double.TryParse(finance[2].InnerHtml.TrimEnd('%'), out double yoy))
                             {
