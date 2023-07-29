@@ -39,15 +39,18 @@ namespace Services.Services
                         List<StockTechDetailModel> stockDetails = stock.StockDetails.OrderByDescending(x => x.t).ToList();
                         var mv5 = stockDetails.Take(5).Select(x => x.v).Average();
                         #region 取得季線乖離率
+                        double ma20 = default;
+                        double ma60 = default;
                         double bias60 = default;
                         if (stockDetails.Count >= 60)
                         {
-                            double ma60 = stockDetails.Take(60).Select(x => x.c).Average();
+                            ma20 = stockDetails.Take(20).Select(x => x.c).Average();
+                            ma60 = stockDetails.Take(60).Select(x => x.c).Average();
                             bias60 = stockDetails.First().c / ma60;
                         }
                         #endregion
                         bool isMatchStrategy = false;
-                        if (mv5 >= 200 && bias60 != default && bias60 <= 1.1)
+                        if (mv5 >= 200 && bias60 != default && bias60 <= 1.1 && ma20 != default && ma60 != default && (stockDetails.First().c >= ma20 || stockDetails.First().c >= ma60))
                         {
                             isMatchStrategy = strategy(stockDetails);
                         }
