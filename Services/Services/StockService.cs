@@ -2,6 +2,7 @@
 using Services.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
 using Repositories.Interfaces;
+using System.Runtime.InteropServices;
 
 namespace Services.Services
 {
@@ -99,16 +100,22 @@ namespace Services.Services
             var last40Days = stockDetails.Take(40).ToList();
             double topClose = last40Days.Select(x => x.c).Max(); // 找到近40天的最高收盤價
             int topDayIndex = last40Days.FindIndex(x => x.c == topClose); // 找到近40天的最高收盤價的位置
-            double lastTopClose = stockDetails.Skip(topDayIndex + 1).Take(20).Select(x => x.c).Max(); // 找到前一個峰值的收盤價
-            int lastTopDayIndex = stockDetails.Skip(topDayIndex + 1).Take(20).ToList().FindIndex(x => x.c == lastTopClose); // 找出第二個峰值的位置
+            //double lastTopClose = stockDetails.Skip(topDayIndex + 1).Take(20).Select(x => x.c).Max(); // 找到前一個峰值的收盤價
+            //int lastTopDayIndex = stockDetails.Skip(topDayIndex + 1).Take(20).ToList().FindIndex(x => x.c == lastTopClose); // 找出第二個峰值的位置
             double bottomClose = stockDetails.Take(topDayIndex).Select(x => x.c).Min(); // 找到最近的底部收盤價
-            double lastBottomClose = stockDetails.Skip(topDayIndex + 1).Take(lastTopDayIndex).Select(x => x.c).Min(); // 找出兩個峰值間的最低值
+            //double lastBottomClose = stockDetails.Skip(topDayIndex + 1).Take(lastTopDayIndex).Select(x => x.c).Min(); // 找出兩個峰值間的最低值
+            double lastBottomClose = stockDetails.Skip(topDayIndex + 1).Take(20).Select(x => x.c).Min(); // 找出近期高點前的 20 天的最低值
             var mh5 = stockDetails.Take(5).Select(x => x.c).Max(); // 找出最近五日收盤價的最高點
             var ml5 = stockDetails.Take(5).Select(x => x.c).Min(); // 找出最近五日收盤價的最低點
-            if (topClose > lastTopClose && bottomClose >= lastBottomClose && mh5/ml5 <= 1.02)
+            if (bottomClose >= lastBottomClose && mh5/ml5 <= 1.02)
             {
                 return true;
             }
+            //if (topClose > lastTopClose && bottomClose >= lastBottomClose && mh5/ml5 <= 1.02)
+            //{
+            //    return true;
+            //}
+
             return false;
         }
         #endregion
