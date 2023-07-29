@@ -11,6 +11,6 @@ namespace Services.Interfaces
     {
         List<StockTechInfoModel> GetJumpEmptyStocks();
         List<StockTechInfoModel> GetBullishPullbackStocks();
-        List<StockFinanceInfoModel> GetEpsIncreasingStocks();
+        List<StockFinanceInfoModel> GetFinanceIncreasingStocks();
     }
 }

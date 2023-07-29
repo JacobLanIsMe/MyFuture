@@ -113,7 +113,7 @@ namespace Services.Services
         }
         #endregion
 
-        public List<StockFinanceInfoModel> GetEpsIncreasingStocks()
+        public List<StockFinanceInfoModel> GetFinanceIncreasingStocks()
         {
             List<string> stockIds = _stockRepository.GetStockIds();
             List<StockFinanceInfoModel> result = new List<StockFinanceInfoModel>();
@@ -121,13 +121,14 @@ namespace Services.Services
             {
                 try
                 {
-                    if (_memoryCache.TryGetValue<StockFinanceInfoModel>($"Finance{i}", out StockFinanceInfoModel? stock) && stock != null && stock.StockDetails != null)
+                    if (_memoryCache.TryGetValue<StockFinanceInfoModel>($"Finance{i}", out StockFinanceInfoModel? stock) && stock != null && stock.StockEpss != null)
                     {
-                        var details = stock.StockDetails;
-                        var isNegativeEps = details.Take(8).Any(x => x.eps < 0);
-                        var firstYoy = details[0].yoy;
-                        var secondYoy = details[1].yoy;
-                        if (!isNegativeEps && firstYoy > 0 && secondYoy > 0)
+                        var stockEpss = stock.StockEpss;
+                        var hasNegativeEps = stockEpss.Take(8).Any(x => x.Eps < 0);
+                        var hasNegativeEpsYoy = stockEpss.Take(2).Any(x=>x.Yoy < 0);
+                        var stockRevenues = stock.StockRevenues;
+                        var hasNegativeRevenueYoy = stockRevenues.Take(3).Any(x=>x.Yoy < 0);
+                        if (!hasNegativeEps && !hasNegativeEpsYoy && !hasNegativeRevenueYoy)
                         {
                             result.Add(stock);
                         }

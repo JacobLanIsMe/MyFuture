@@ -44,13 +44,13 @@ namespace MyFuture.Controllers
             }
             return result;
         }
-        [HttpGet("GetEpsIncreasingStocks")]
-        public ApiDataResponseModel GetEpsIncreasingStocks()
+        [HttpGet("GetFinanceIncreasingStocks")]
+        public ApiDataResponseModel GetFinanceIncreasingStocks()
         {
             ApiDataResponseModel result = new ApiDataResponseModel();
             try
             {
-                result.Data = _stockService.GetEpsIncreasingStocks();
+                result.Data = _stockService.GetFinanceIncreasingStocks();
                 result.SetSuccess();
             }
             catch (Exception ex)
