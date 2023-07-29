@@ -81,17 +81,23 @@ namespace Services.Services
         #region JumpEmpty
         private bool JumpEmptyStrategy(List<StockTechDetailModel> stockDetails)
         {
-            for (int j = 1; j < 10; j++)
+            for (int j = 1; j < 20; j++)
             {
-                if (stockDetails[j].l >= stockDetails[j + 1].h)
+                if (stockDetails[j].l > stockDetails[j + 1].h)
                 {
                     var periodStocks = stockDetails.Take(j).ToList();
-                    var topClose = periodStocks.Select(x => x.c).Max();
-                    var lowClose = periodStocks.Select(x => x.c).Min();
-                    if (topClose <= stockDetails[j].h && lowClose >= stockDetails[j + 1].h)
+                    int overRangeCount = periodStocks.Where(x => (x.c > stockDetails[j].h || x.c < stockDetails[j + 1].h)).Count();
+                    int canOrverRangeCount = (int)(periodStocks.Count / 5);
+                    if (overRangeCount <= canOrverRangeCount)
                     {
                         return true;
                     }
+                    //var topClose = periodStocks.Select(x => x.c).Max();
+                    //var lowClose = periodStocks.Select(x => x.c).Min();
+                    //if (topClose <= stockDetails[j].h && lowClose >= stockDetails[j + 1].h)
+                    //{
+                    //    return true;
+                    //}
                 }
             }
             return false;
