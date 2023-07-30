@@ -88,7 +88,7 @@ namespace Services.Services
                     if (stockDetails[j].l > stockDetails[j + 1].h)
                     {
                         double volatility = stockDetails[j].h / stockDetails[j].l;
-                        if (volatility <= 1.04)
+                        if (volatility <= 1.05)
                         {
                             var periodStocks = stockDetails.Take(j).ToList();
                             int overRangeCount = periodStocks.Where(x => (x.c > stockDetails[j].h || x.c < stockDetails[j + 1].h)).Count();
