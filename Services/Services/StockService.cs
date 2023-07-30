@@ -39,18 +39,15 @@ namespace Services.Services
                         List<StockTechDetailModel> stockDetails = stock.StockDetails.OrderByDescending(x => x.t).ToList();
                         var mv5 = stockDetails.Take(5).Select(x => x.v).Average();
                         #region 取得季線乖離率
-                        double ma20 = default;
-                        double ma60 = default;
                         double bias60 = default;
                         if (stockDetails.Count >= 60)
                         {
-                            ma20 = stockDetails.Take(20).Select(x => x.c).Average();
-                            ma60 = stockDetails.Take(60).Select(x => x.c).Average();
+                            double ma60 = stockDetails.Take(60).Select(x => x.c).Average();
                             bias60 = stockDetails.First().c / ma60;
                         }
                         #endregion
                         bool isMatchStrategy = false;
-                        if (mv5 >= 200 && bias60 != default && bias60 <= 1.1 && ma20 != default && ma60 != default && (stockDetails.First().c >= ma20 || stockDetails.First().c >= ma60))
+                        if (mv5 >= 200 && bias60 != default && bias60 <= 1.1)
                         {
                             isMatchStrategy = strategy(stockDetails);
                         }
@@ -81,23 +78,33 @@ namespace Services.Services
         #region JumpEmpty
         private bool JumpEmptyStrategy(List<StockTechDetailModel> stockDetails)
         {
-            for (int j = 1; j < 20; j++)
+            double ma20 = stockDetails.Take(20).Select(x => x.c).Average();
+            double ma60 = stockDetails.Take(60).Select(x => x.c).Average();
+            double todayClose = stockDetails.First().c;
+            if (todayClose >= ma20 || todayClose >= ma60)
             {
-                if (stockDetails[j].l > stockDetails[j + 1].h)
+                for (int j = 1; j < 20; j++)
                 {
-                    var periodStocks = stockDetails.Take(j).ToList();
-                    int overRangeCount = periodStocks.Where(x => (x.c > stockDetails[j].h || x.c < stockDetails[j + 1].h)).Count();
-                    int canOrverRangeCount = (int)(periodStocks.Count / 5);
-                    if (overRangeCount <= canOrverRangeCount)
+                    if (stockDetails[j].l > stockDetails[j + 1].h)
                     {
-                        return true;
+                        double volatility = stockDetails[j].h / stockDetails[j].l;
+                        if (volatility <= 1.04)
+                        {
+                            var periodStocks = stockDetails.Take(j).ToList();
+                            int overRangeCount = periodStocks.Where(x => (x.c > stockDetails[j].h || x.c < stockDetails[j + 1].h)).Count();
+                            int canOrverRangeCount = (int)(periodStocks.Count / 5);
+                            if (overRangeCount <= canOrverRangeCount)
+                            {
+                                return true;
+                            }
+                            //var topClose = periodStocks.Select(x => x.c).Max();
+                            //var lowClose = periodStocks.Select(x => x.c).Min();
+                            //if (topClose <= stockDetails[j].h && lowClose >= stockDetails[j + 1].h)
+                            //{
+                            //    return true;
+                            //}
+                        }
                     }
-                    //var topClose = periodStocks.Select(x => x.c).Max();
-                    //var lowClose = periodStocks.Select(x => x.c).Min();
-                    //if (topClose <= stockDetails[j].h && lowClose >= stockDetails[j + 1].h)
-                    //{
-                    //    return true;
-                    //}
                 }
             }
             return false;
