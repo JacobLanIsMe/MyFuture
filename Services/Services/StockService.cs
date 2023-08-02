@@ -150,8 +150,9 @@ namespace Services.Services
                         var hasNegativeEps = stockEpss.Take(8).Any(x => x.Eps < 0);
                         var hasNegativeEpsYoy = stockEpss.Take(2).Any(x=>x.Yoy < 0);
                         var stockRevenues = stock.StockRevenues;
-                        var hasNegativeRevenueYoy = stockRevenues.Take(3).Any(x=>x.Yoy < 0);
-                        if (!hasNegativeEps && !hasNegativeEpsYoy && !hasNegativeRevenueYoy)
+                        var hasNotTwoDigitGrowth = stockRevenues.Take(3).Any(x => x.Yoy < 10);
+                        //var hasNegativeRevenueYoy = stockRevenues.Take(3).Any(x=>x.Yoy < 0);
+                        if (!hasNegativeEps && !hasNegativeEpsYoy && !hasNotTwoDigitGrowth)
                         {
                             result.Add(stock);
                         }
