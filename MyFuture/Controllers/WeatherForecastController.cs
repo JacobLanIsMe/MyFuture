@@ -32,10 +32,15 @@ namespace MyFuture.Controllers
             })
             .ToArray();
         }
-        [HttpGet("RedisTest")]
-        public void RedisTest(string a)
+        [HttpGet("SetRedis")]
+        public void SetRedis(string a)
         {
             _cache.SetString("Test", a);
+        }
+        [HttpGet("GetRedis")]
+        public string GetRedis(string key)
+        {
+            return _cache.GetString(key);
         }
     }
 }
