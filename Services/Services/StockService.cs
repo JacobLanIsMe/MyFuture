@@ -83,9 +83,10 @@ namespace Services.Services
             double todayClose = stockDetails.First().c;
             if (todayClose >= ma20 || todayClose >= ma60)
             {
-                for (int j = 1; j < 20; j++)
+                for (int j = 2; j < 20; j++)
                 {
-                    if (stockDetails[j].l >= stockDetails[j + 1].h)
+                    //if (stockDetails[j].l >= stockDetails[j + 1].h)
+                    if (stockDetails[j].o > stockDetails[j + 1].h && stockDetails[j].c > stockDetails[j + 1].h)
                     {
                         double volatility = stockDetails[j].h / stockDetails[j].l;
                         if (volatility <= 1.04)
@@ -123,7 +124,7 @@ namespace Services.Services
             double lastBottomClose = stockDetails.Skip(topDayIndex + 1).Take(20).Select(x => x.c).Min(); // 找出近期高點前的 20 天的最低值
             var mh5 = stockDetails.Take(5).Select(x => x.c).Max(); // 找出最近五日收盤價的最高點
             var ml5 = stockDetails.Take(5).Select(x => x.c).Min(); // 找出最近五日收盤價的最低點
-            if (bottomClose >= lastBottomClose && mh5/ml5 <= 1.02)
+            if (bottomClose >= lastBottomClose && mh5 / ml5 <= 1.02)
             {
                 return true;
             }
@@ -148,7 +149,7 @@ namespace Services.Services
                     {
                         var stockEpss = stock.StockEpss;
                         var hasNegativeEps = stockEpss.Take(8).Any(x => x.Eps < 0);
-                        var hasNegativeEpsYoy = stockEpss.Take(2).Any(x=>x.Yoy < 0);
+                        var hasNegativeEpsYoy = stockEpss.Take(2).Any(x => x.Yoy < 0);
                         var stockRevenues = stock.StockRevenues;
                         var hasNotTwoDigitGrowth = stockRevenues.Take(3).Any(x => x.Yoy < 10);
                         //var hasNegativeRevenueYoy = stockRevenues.Take(3).Any(x=>x.Yoy < 0);
