@@ -3,16 +3,18 @@ using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
 using Caches.Interfaces;
 using Repositories.Interfaces;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text;
 
 namespace Caches.Caches
 {
     public class CacheStockTech : ICacheStockTech
     {
-        private readonly IMemoryCache _memoryCache;
+        private readonly IDistributedCache _cache;
         private readonly IStockRepository _stockRepository;
-        public CacheStockTech(IMemoryCache memoryCache, IStockRepository stockRepository)
+        public CacheStockTech(IDistributedCache cache, IStockRepository stockRepository)
         {
-            _memoryCache = memoryCache;
+            _cache = cache;
             _stockRepository = stockRepository;
         }
         public async Task SetStockTechCache()
@@ -43,7 +45,8 @@ namespace Caches.Caches
                     stock.Id = stockId;
                     if (!string.IsNullOrEmpty(name))
                     {
-                        _memoryCache.Set($"Tech{stockId}", stock);
+                        string stockString = JsonSerializer.Serialize(stock);
+                        _cache.SetString($"Tech{stockId}", stockString);
                     }
                 }
                 catch (Exception ex)

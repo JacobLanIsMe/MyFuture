@@ -3,17 +3,19 @@ using Services.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
 using Repositories.Interfaces;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace Services.Services
 {
     public class StockService : IStockService
     {
-        private readonly IMemoryCache _memoryCache;
+        private readonly IDistributedCache _cache;
         private readonly IStockRepository _stockRepository;
         //private readonly ILogger<StockService> _logger;
-        public StockService(IMemoryCache memoryCache, IStockRepository stockRepository)
+        public StockService(IDistributedCache cache, IStockRepository stockRepository)
         {
-            _memoryCache = memoryCache;
+            _cache = cache;
             _stockRepository = stockRepository;
         }
         public List<StockTechInfoModel> GetJumpEmptyStocks()
@@ -34,8 +36,14 @@ namespace Services.Services
             {
                 try
                 {
-                    if (_memoryCache.TryGetValue<StockTechInfoModel>($"Tech{i}", out StockTechInfoModel? stock) && stock != null && stock.StockDetails != null)
+                    string? stockString = _cache.GetString($"Tech{i}");
+                    if (!string.IsNullOrEmpty(stockString))
                     {
+                        StockTechInfoModel? stock = JsonSerializer.Deserialize<StockTechInfoModel>(stockString);
+                        if (stock == null || stock.StockDetails == null)
+                        {
+                            continue;
+                        }
                         List<StockTechDetailModel> stockDetails = stock.StockDetails.OrderByDescending(x => x.t).ToList();
                         var mv5 = stockDetails.Take(5).Select(x => x.v).Average();
                         #region 取得季線乖離率
@@ -144,8 +152,15 @@ namespace Services.Services
             {
                 try
                 {
-                    if (_memoryCache.TryGetValue<StockFinanceInfoModel>($"Finance{i}", out StockFinanceInfoModel? stock) && stock != null && stock.StockEpss != null)
+                    string? stockString = _cache.GetString($"Finance{i}");
+
+                    if (!string.IsNullOrEmpty(stockString))
                     {
+                        StockFinanceInfoModel? stock = JsonSerializer.Deserialize<StockFinanceInfoModel>(stockString);
+                        if (stock == null || stock.StockEpss == null || stock.StockRevenues == null)
+                        {
+                            continue;
+                        }
                         var stockEpss = stock.StockEpss;
                         var hasNegativeEps = stockEpss.Take(8).Any(x => x.Eps < 0);
                         var hasNegativeEpsYoy = stockEpss.Take(2).Any(x=>x.Yoy < 0);

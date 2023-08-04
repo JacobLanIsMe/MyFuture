@@ -1,5 +1,6 @@
 ﻿using AngleSharp.Html.Parser;
 using Caches.Interfaces;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Models.Models;
 using Repositories.Interfaces;
@@ -7,17 +8,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Caches.Caches
 {
     public class CacheStockFinance : ICacheStockFinance
     {
-        private readonly IMemoryCache _memoryCache;
+        private readonly IDistributedCache _cache;
         private readonly IStockRepository _stockRepository;
-        public CacheStockFinance(IMemoryCache memoryCache, IStockRepository stockRepository)
+        public CacheStockFinance(IDistributedCache cache, IStockRepository stockRepository)
         {
-            _memoryCache = memoryCache;
+            _cache = cache;
             _stockRepository = stockRepository;
         }
         public async Task SetStockFinanceCache()
@@ -38,7 +40,8 @@ namespace Caches.Caches
                     stock.StockRevenues = revenue;
                     if (!string.IsNullOrEmpty(stock.Name))
                     {
-                        _memoryCache.Set($"Finance{stockId}", stock);
+                        string stockString = JsonSerializer.Serialize(stock);
+                        _cache.SetString($"Finance{stockId}", stockString);
                     }
                 }
                 catch (Exception ex)
