@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace MyFuture.Controllers
 {
@@ -6,6 +7,7 @@ namespace MyFuture.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
+        private readonly IDistributedCache _cache;
         private static readonly string[] Summaries = new[]
         {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -13,9 +15,10 @@ namespace MyFuture.Controllers
 
         private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IDistributedCache cache)
         {
             _logger = logger;
+            _cache = cache;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
@@ -28,6 +31,11 @@ namespace MyFuture.Controllers
                 Summary = Summaries[Random.Shared.Next(Summaries.Length)]
             })
             .ToArray();
+        }
+        [HttpGet("RedisTest")]
+        public void RedisTest(string a)
+        {
+            _cache.SetString("Test", a);
         }
     }
 }
