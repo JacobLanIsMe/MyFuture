@@ -15,7 +15,7 @@ namespace MyFuture.BackgroundServices
             {
                 try
                 {
-                    #region 取得所有的 StockInfo，並寫入 Cache
+                    #region 取得所有的 StockInfo，並寫入
                     using (var scope = _serviceProvider.CreateScope())
                     {
                         var service = scope.ServiceProvider.GetRequiredService<ICacheStockTech>();
