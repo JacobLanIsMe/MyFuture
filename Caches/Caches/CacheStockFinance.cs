@@ -28,7 +28,7 @@ namespace Caches.Caches
                 try
                 {
                     StockFinanceInfoModel stock = new StockFinanceInfoModel();
-                    stock.Id = stockId;
+                    stock.StockId = stockId;
                     var stockEps = GetStockNameAndEPS(stock);
                     var stockRevenue = GetStockRevenue(stock);
                     var (name, eps) = await stockEps;

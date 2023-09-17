@@ -8,7 +8,6 @@ namespace Models.Models
 {
     public class StockTechInfoModel : StockBaseModel
     {
-        
         public List<StockTechDetailModel>? StockDetails { get; set; }
     }
 }
