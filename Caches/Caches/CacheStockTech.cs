@@ -5,6 +5,7 @@ using Caches.Interfaces;
 using Repositories.Interfaces;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
+using MongoDbProvider;
 
 namespace Caches.Caches
 {
@@ -12,17 +13,17 @@ namespace Caches.Caches
     {
         // private readonly IMemoryCache _memoryCache;
         private readonly IStockRepository _stockRepository;
-        private string? mongoConn = null;
-        public CacheStockTech(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, Microsoft.Extensions.Configuration.IConfiguration config)
+        private readonly IMongoDbService _mongoDbService;
+        public CacheStockTech(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService)
         {
             // _memoryCache = memoryCache;
             _stockRepository = stockRepository;
-            mongoConn = config.GetConnectionString("Mongo");
+            _mongoDbService = mongoDbService;
         }
         public async Task SetStockTechCache()
         {
-            MongoClient mongoClient = new MongoClient();
-            mongoClient.GetDatabase("MyFuture");
+            MongoClient mongoClient = _mongoDbService.GetMongoClient();
+            var collection = mongoClient.GetDatabase("MyFuture").GetCollection<StockTechInfoModel>("StockTech");
             List<string> stockIds = _stockRepository.GetStockIds(); // 取得所有的 stockId
             #region 取得所有的 StockInfo，並寫入 Cache
             foreach (var stockId in stockIds)
@@ -50,6 +51,8 @@ namespace Caches.Caches
                     if (!string.IsNullOrEmpty(name))
                     {
                         // _memoryCache.Set($"Tech{stockId}", stock);
+                        var filter = Builders<StockTechInfoModel>.Filter.Eq(r=>r.StockId, stockId);
+                        await _mongoDbService.InsertOrUpdateStock(collection, filter, stock);
                     }
                 }
                 catch (Exception ex)

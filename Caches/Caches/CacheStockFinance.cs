@@ -2,6 +2,8 @@
 using Caches.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
 using Models.Models;
+using MongoDB.Driver;
+using MongoDbProvider;
 using Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -13,22 +15,28 @@ namespace Caches.Caches
 {
     public class CacheStockFinance : ICacheStockFinance
     {
-        private readonly IMemoryCache _memoryCache;
+        // private readonly IMemoryCache _memoryCache;
         private readonly IStockRepository _stockRepository;
-        public CacheStockFinance(IMemoryCache memoryCache, IStockRepository stockRepository)
+        private readonly IMongoDbService _mongoDbService;
+        public CacheStockFinance(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService)
         {
-            _memoryCache = memoryCache;
+            // _memoryCache = memoryCache;
             _stockRepository = stockRepository;
+            _mongoDbService = mongoDbService;
         }
         public async Task SetStockFinanceCache()
         {
             List<string> stockIds = _stockRepository.GetStockIds();
+            MongoClient mongoClient = _mongoDbService.GetMongoClient();
+            var collection = mongoClient.GetDatabase("MyFuture").GetCollection<StockFinanceInfoModel>("StockFinance");
             foreach (var stockId in stockIds)
             {
                 try
                 {
-                    StockFinanceInfoModel stock = new StockFinanceInfoModel();
-                    stock.StockId = stockId;
+                    StockFinanceInfoModel stock = new StockFinanceInfoModel
+                    {
+                        StockId = stockId
+                    };
                     var stockEps = GetStockNameAndEPS(stock);
                     var stockRevenue = GetStockRevenue(stock);
                     var (name, eps) = await stockEps;
@@ -38,7 +46,9 @@ namespace Caches.Caches
                     stock.StockRevenues = revenue;
                     if (!string.IsNullOrEmpty(stock.Name))
                     {
-                        _memoryCache.Set($"Finance{stockId}", stock);
+                        // _memoryCache.Set($"Finance{stockId}", stock);
+                        var filter = Builders<StockFinanceInfoModel>.Filter.Eq(r=>r.StockId, stockId);
+                        await _mongoDbService.InsertOrUpdateStock(collection, filter, stock);
                     }
                 }
                 catch (Exception ex)

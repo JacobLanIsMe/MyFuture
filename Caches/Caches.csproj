@@ -17,6 +17,7 @@
     <ProjectReference Include="..\Models\Models.csproj" />
     <ProjectReference Include="..\Repository\Repositories.csproj" />
     <ProjectReference Include="..\MongoFactory\MongoFactory.csproj" />
+    <ProjectReference Include="..\MongoDbProvider\MongoDbProvider.csproj" />
   </ItemGroup>
 
 </Project>
