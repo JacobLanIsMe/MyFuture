@@ -160,7 +160,7 @@ namespace Services.Services
                     // if (_memoryCache.TryGetValue<StockFinanceInfoModel>($"Finance{i}", out StockFinanceInfoModel? stock) && stock != null && stock.StockEpss != null)
                     var filter = Builders<StockFinanceInfoModel>.Filter.Eq(r=>r.StockId, i);
                     var stock = financeCollection.Find(filter).FirstOrDefault();
-                    if (stock != null)
+                    if (stock != null && stock.StockEpss != null && stock.StockRevenues != null)
                     {
                         var stockEpss = stock.StockEpss;
                         var hasNegativeEps = stockEpss.Take(8).Any(x => x.Eps < 0);
