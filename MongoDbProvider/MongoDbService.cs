@@ -10,7 +10,6 @@ namespace MongoDbProvider
 {
     public class MongoDbService : IMongoDbService
     {
-        private string? connString = null;
         private MongoClient? mongoClient = null;
         public MongoDbService(IConfiguration config)
         {

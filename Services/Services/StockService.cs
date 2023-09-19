@@ -15,20 +15,14 @@ namespace Services.Services
         // private readonly IMemoryCache _memoryCache;
         private readonly IStockRepository _stockRepository;
         private readonly IMongoDbService _mongoDbservice;
-        private IMongoCollection<StockTechInfoModel> techCollection;
+        private MongoClient mongoClient;
         //private readonly ILogger<StockService> _logger;
         public StockService(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService, IConfiguration config)
         {
             // _memoryCache = memoryCache;
             _stockRepository = stockRepository;
             _mongoDbservice = mongoDbService;
-            string connString = config.GetConnectionString("Mongo");
-            if (string.IsNullOrEmpty(connString))
-            {
-                throw new Exception("connString is missing.");
-            }
-            MongoClient mongoClient = new MongoClient(connString);
-            techCollection = mongoClient.GetDatabase("MyFuture").GetCollection<StockTechInfoModel>("StockTech");
+            mongoClient = _mongoDbservice.GetMongoClient();
         }
         public List<StockTechInfoModel> GetJumpEmptyStocks()
         {
@@ -42,6 +36,7 @@ namespace Services.Services
         }
         private List<StockTechInfoModel> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy)
         {
+            var techCollection = mongoClient.GetDatabase("MyFuture").GetCollection<StockTechInfoModel>("StockTech");
             List<string> stockIds = _stockRepository.GetStockIds();
             List<StockTechInfoModel> result = new List<StockTechInfoModel>();
             foreach (var i in stockIds)
@@ -155,13 +150,17 @@ namespace Services.Services
 
         public List<StockFinanceInfoModel> GetFinanceIncreasingStocks()
         {
+            var financeCollection = mongoClient.GetDatabase("MyFuture").GetCollection<StockFinanceInfoModel>("StockFinance");
             List<string> stockIds = _stockRepository.GetStockIds();
             List<StockFinanceInfoModel> result = new List<StockFinanceInfoModel>();
             foreach (var i in stockIds)
             {
                 try
                 {
-                    if (_memoryCache.TryGetValue<StockFinanceInfoModel>($"Finance{i}", out StockFinanceInfoModel? stock) && stock != null && stock.StockEpss != null)
+                    // if (_memoryCache.TryGetValue<StockFinanceInfoModel>($"Finance{i}", out StockFinanceInfoModel? stock) && stock != null && stock.StockEpss != null)
+                    var filter = Builders<StockFinanceInfoModel>.Filter.Eq(r=>r.StockId, i);
+                    var stock = financeCollection.Find(filter).FirstOrDefault();
+                    if (stock != null)
                     {
                         var stockEpss = stock.StockEpss;
                         var hasNegativeEps = stockEpss.Take(8).Any(x => x.Eps < 0);
@@ -175,10 +174,7 @@ namespace Services.Services
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-
-                }
+                catch {}
             }
             return result;
         }
