@@ -3,18 +3,32 @@ using Services.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
 using Repositories.Interfaces;
 using System.Runtime.InteropServices;
+using MongoDbProvider;
+using Microsoft.Extensions.Configuration;
+using MongoDB.Driver;
+using System.Collections.ObjectModel;
 
 namespace Services.Services
 {
     public class StockService : IStockService
     {
-        private readonly IMemoryCache _memoryCache;
+        // private readonly IMemoryCache _memoryCache;
         private readonly IStockRepository _stockRepository;
+        private readonly IMongoDbService _mongoDbservice;
+        private IMongoCollection<StockTechInfoModel> techCollection;
         //private readonly ILogger<StockService> _logger;
-        public StockService(IMemoryCache memoryCache, IStockRepository stockRepository)
+        public StockService(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService, IConfiguration config)
         {
-            _memoryCache = memoryCache;
+            // _memoryCache = memoryCache;
             _stockRepository = stockRepository;
+            _mongoDbservice = mongoDbService;
+            string connString = config.GetConnectionString("Mongo");
+            if (string.IsNullOrEmpty(connString))
+            {
+                throw new Exception("connString is missing.");
+            }
+            MongoClient mongoClient = new MongoClient(connString);
+            techCollection = mongoClient.GetDatabase("MyFuture").GetCollection<StockTechInfoModel>("StockTech");
         }
         public List<StockTechInfoModel> GetJumpEmptyStocks()
         {
@@ -34,7 +48,10 @@ namespace Services.Services
             {
                 try
                 {
-                    if (_memoryCache.TryGetValue<StockTechInfoModel>($"Tech{i}", out StockTechInfoModel? stock) && stock != null && stock.StockDetails != null)
+                    // if (_memoryCache.TryGetValue<StockTechInfoModel>($"Tech{i}", out StockTechInfoModel? stock) && stock != null && stock.StockDetails != null)
+                    var filter = Builders<StockTechInfoModel>.Filter.Eq(r=>r.StockId, i);
+                    StockTechInfoModel stock = techCollection.Find(filter).FirstOrDefault();
+                    if (stock != null)
                     {
                         List<StockTechDetailModel> stockDetails = stock.StockDetails.OrderByDescending(x => x.t).ToList();
                         var mv5 = stockDetails.Take(5).Select(x => x.v).Average();
@@ -56,7 +73,7 @@ namespace Services.Services
                         {
                             StockTechInfoModel model = new StockTechInfoModel
                             {
-                                Id = stock.Id,
+                                StockId = stock.StockId,
                                 Name = stock.Name,
                                 StockDetails = stockDetails.Take(1).ToList()
                             };
@@ -64,10 +81,7 @@ namespace Services.Services
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-
-                }
+                catch {}
             }
             return result;
         }

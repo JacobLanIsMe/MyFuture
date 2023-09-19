@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Models\Models.csproj" />
     <ProjectReference Include="..\Repository\Repositories.csproj" />
+    <ProjectReference Include="..\MongoDbProvider\MongoDbProvider.csproj" />
   </ItemGroup>
 
 </Project>
