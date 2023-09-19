@@ -60,7 +60,7 @@ namespace Caches.Caches
         private async Task<(string? name, List<StockEpsModel> eps)> GetStockNameAndEPS(StockFinanceInfoModel stock)
         {
             HttpClient client = new HttpClient();
-            string url = $"https://tw.stock.yahoo.com/quote/{stock.Id}.TW/eps";
+            string url = $"https://tw.stock.yahoo.com/quote/{stock.StockId}.TW/eps";
             var responseMsg = await client.GetAsync(url);
             string? name = null;
             List<StockEpsModel> details = new List<StockEpsModel>();
