@@ -24,10 +24,7 @@ namespace MyFuture.BackgroundServices
                     }
                     #endregion
                 }
-                catch (Exception ex)
-                {
-
-                }
+                catch{}
                 await Task.Delay(TimeSpan.FromMinutes(60));
             }
         }

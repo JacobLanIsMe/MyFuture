@@ -55,10 +55,7 @@ namespace Caches.Caches
                         await _mongoDbService.InsertOrUpdateStock(collection, filter, stock);
                     }
                 }
-                catch (Exception ex)
-                {
-
-                }
+                catch{}
             }
             #endregion
         }

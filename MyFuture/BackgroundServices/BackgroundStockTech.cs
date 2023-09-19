@@ -23,7 +23,7 @@ namespace MyFuture.BackgroundServices
                     }
                     #endregion
                 }
-                catch (Exception ex)
+                catch
                 {
 
                 }
