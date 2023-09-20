@@ -37,6 +37,7 @@ namespace Services.Services
         private List<StockTechInfoModel> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy)
         {
             var techCollection = mongoClient.GetDatabase("MyFuture").GetCollection<StockTechInfoModel>("StockTech");
+            List<StockTechInfoModel> allData = _mongoDbservice.GetAllData<StockTechInfoModel>(techCollection);
             List<string> stockIds = _stockRepository.GetStockIds();
             List<StockTechInfoModel> result = new List<StockTechInfoModel>();
             foreach (var i in stockIds)
@@ -44,8 +45,7 @@ namespace Services.Services
                 try
                 {
                     // if (_memoryCache.TryGetValue<StockTechInfoModel>($"Tech{i}", out StockTechInfoModel? stock) && stock != null && stock.StockDetails != null)
-                    var filter = Builders<StockTechInfoModel>.Filter.Eq(r=>r.StockId, i);
-                    StockTechInfoModel stock = techCollection.Find(filter).FirstOrDefault();
+                    var stock = allData.Where(x => x.StockId == i).FirstOrDefault();
                     if (stock != null)
                     {
                         List<StockTechDetailModel> stockDetails = stock.StockDetails.OrderByDescending(x => x.t).ToList();
@@ -76,7 +76,7 @@ namespace Services.Services
                         }
                     }
                 }
-                catch {}
+                catch { }
             }
             return result;
         }
@@ -109,7 +109,7 @@ namespace Services.Services
                             {
                                 overRangeCount = periodStocks.Where(x => (x.c > stockDetails[j].h || x.c < stockDetails[j].l)).Count();
                             }
-                            
+
                             int canOrverRangeCount = (int)(periodStocks.Count / 5);
                             if (overRangeCount <= canOrverRangeCount)
                             {
@@ -151,6 +151,7 @@ namespace Services.Services
         public List<StockFinanceInfoModel> GetFinanceIncreasingStocks()
         {
             var financeCollection = mongoClient.GetDatabase("MyFuture").GetCollection<StockFinanceInfoModel>("StockFinance");
+            List<StockFinanceInfoModel> allData = _mongoDbservice.GetAllData<StockFinanceInfoModel>(financeCollection);
             List<string> stockIds = _stockRepository.GetStockIds();
             List<StockFinanceInfoModel> result = new List<StockFinanceInfoModel>();
             foreach (var i in stockIds)
@@ -158,8 +159,7 @@ namespace Services.Services
                 try
                 {
                     // if (_memoryCache.TryGetValue<StockFinanceInfoModel>($"Finance{i}", out StockFinanceInfoModel? stock) && stock != null && stock.StockEpss != null)
-                    var filter = Builders<StockFinanceInfoModel>.Filter.Eq(r=>r.StockId, i);
-                    var stock = financeCollection.Find(filter).FirstOrDefault();
+                    var stock = allData.Where(x => x.StockId == i).FirstOrDefault();
                     if (stock != null && stock.StockEpss != null && stock.StockRevenues != null)
                     {
                         var stockEpss = stock.StockEpss;
@@ -174,7 +174,7 @@ namespace Services.Services
                         }
                     }
                 }
-                catch {}
+                catch { }
             }
             return result;
         }

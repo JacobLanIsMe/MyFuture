@@ -47,5 +47,10 @@ namespace MongoDbProvider
                 }
             }
         }
+        public List<T> GetAllData<T>(IMongoCollection<T> collection)
+        {
+            var filter = Builders<T>.Filter.Empty;
+            return collection.Find(filter).ToList();
+        }
     }
 }
