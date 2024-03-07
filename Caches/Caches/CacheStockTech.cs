@@ -23,9 +23,10 @@ namespace Caches.Caches
         public async Task SetStockTechCache()
         {
             MongoClient mongoClient = _mongoDbService.GetMongoClient();
-            var collection = mongoClient.GetDatabase("MyFuture").GetCollection<StockTechInfoModel>("StockTech");
+            var collection = mongoClient.GetDatabase("MyFuture").GetCollection<Stock<StockTechInfoModel>>("Tech");
             List<string> stockIds = _stockRepository.GetStockIds(); // 取得所有的 stockId
-            #region 取得所有的 StockInfo，並寫入 Cache
+            #region 取得所有的 StockInfo，並寫入 Mongo
+            List<StockTechInfoModel> results = new List<StockTechInfoModel>();
             foreach (var stockId in stockIds)
             {
                 try
@@ -51,12 +52,13 @@ namespace Caches.Caches
                     if (!string.IsNullOrEmpty(name))
                     {
                         // _memoryCache.Set($"Tech{stockId}", stock);
-                        var filter = Builders<StockTechInfoModel>.Filter.Eq(r=>r.StockId, stockId);
-                        await _mongoDbService.InsertOrUpdateStock(collection, filter, stock);
+                        results.Add(stock);
                     }
                 }
                 catch{}
             }
+            var filter = Builders<Stock<StockTechInfoModel>>.Filter.Empty;
+            await _mongoDbService.InsertOrUpdateStock(collection, filter, new Stock<StockTechInfoModel>() { Data = results });
             #endregion
         }
     }

@@ -6,6 +6,7 @@ using MongoDB.Driver;
 using MongoDbProvider;
 using Repositories.Interfaces;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,7 +29,8 @@ namespace Caches.Caches
         {
             List<string> stockIds = _stockRepository.GetStockIds();
             MongoClient mongoClient = _mongoDbService.GetMongoClient();
-            var collection = mongoClient.GetDatabase("MyFuture").GetCollection<StockFinanceInfoModel>("StockFinance");
+            var collection = mongoClient.GetDatabase("MyFuture").GetCollection<Stock<StockFinanceInfoModel>>("Finance");
+            List<StockFinanceInfoModel> results = new List<StockFinanceInfoModel>();
             foreach (var stockId in stockIds)
             {
                 try
@@ -47,15 +49,13 @@ namespace Caches.Caches
                     if (!string.IsNullOrEmpty(stock.Name))
                     {
                         // _memoryCache.Set($"Finance{stockId}", stock);
-                        var filter = Builders<StockFinanceInfoModel>.Filter.Eq(r=>r.StockId, stockId);
-                        await _mongoDbService.InsertOrUpdateStock(collection, filter, stock);
+                        results.Add(stock);
                     }
                 }
-                catch (Exception ex)
-                {
-                    
-                }
+                catch (Exception ex){}
             }
+            var filter = Builders<Stock<StockFinanceInfoModel>>.Filter.Empty;
+            await _mongoDbService.InsertOrUpdateStock(collection, filter, new Stock<StockFinanceInfoModel>() { Data = results } );
         }
         private async Task<(string? name, List<StockEpsModel> eps)> GetStockNameAndEPS(StockFinanceInfoModel stock)
         {

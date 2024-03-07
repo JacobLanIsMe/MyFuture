@@ -37,14 +37,7 @@ namespace MongoDbProvider
             }
             else
             {
-                Type objectType = typeof(T);
-                PropertyInfo propertyInfo = objectType.GetProperty("Id");
-                if (propertyInfo != null)
-                {
-                    var oldId = propertyInfo.GetValue(oldStock);
-                    propertyInfo.SetValue(stock, oldId);
-                    await collection.ReplaceOneAsync(filter, stock);
-                }
+                await collection.ReplaceOneAsync(filter, stock);
             }
         }
         public List<T> GetAllData<T>(IMongoCollection<T> collection)
