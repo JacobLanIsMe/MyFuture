@@ -31,8 +31,6 @@ namespace Caches.Caches
         public async Task SetStockEpsCache()
         {
             List<string> stockIds = _stockRepository.GetStockIds();
-            MongoClient mongoClient = _mongoDbService.GetMongoClient();
-            var collection = mongoClient.GetDatabase("MyFuture").GetCollection<Stock<StockEpsModel>>("EPS");
             List<StockEpsModel> results = new List<StockEpsModel>();
             foreach (var stockId in stockIds)
             {
@@ -60,8 +58,11 @@ namespace Caches.Caches
             try
             {
                 _logger.LogInformation("Writing stock EPS into Mongodb started");
-                var filter = Builders<Stock<StockEpsModel>>.Filter.Empty;
-                await _mongoDbService.InsertOrUpdateStock(collection, filter, new Stock<StockEpsModel>() { Data = results });
+                MongoClient mongoClient = _mongoDbService.GetMongoClient();
+                var collection = mongoClient.GetDatabase("MyFuture").GetCollection<StockEpsModel>("EPS");
+                var filter = Builders<StockEpsModel>.Filter.Empty;
+                await collection.DeleteManyAsync(filter);
+                await collection.InsertManyAsync(results);
                 _logger.LogInformation("Writing stock EPS into Mongodb completed");
             }
             catch(Exception ex)

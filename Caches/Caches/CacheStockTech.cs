@@ -25,10 +25,7 @@ namespace Caches.Caches
         }
         public async Task SetStockTechCache()
         {
-            MongoClient mongoClient = _mongoDbService.GetMongoClient();
-            var collection = mongoClient.GetDatabase("MyFuture").GetCollection<Stock<StockTechInfoModel>>("Tech");
             List<string> stockIds = _stockRepository.GetStockIds(); // 取得所有的 stockId
-            #region 取得所有的 StockInfo，並寫入 Mongo
             List<StockTechInfoModel> results = new List<StockTechInfoModel>();
             foreach (var stockId in stockIds)
             {
@@ -67,15 +64,17 @@ namespace Caches.Caches
             try
             {
                 _logger.LogInformation("Writing stock tech into Mongodb started");
-                var filter = Builders<Stock<StockTechInfoModel>>.Filter.Empty;
-                await _mongoDbService.InsertOrUpdateStock(collection, filter, new Stock<StockTechInfoModel>() { Data = results });
+                MongoClient mongoClient = _mongoDbService.GetMongoClient();
+                var collection = mongoClient.GetDatabase("MyFuture").GetCollection<StockTechInfoModel> ("Tech");
+                var filter = Builders<StockTechInfoModel>.Filter.Empty;
+                await collection.DeleteManyAsync(filter);
+                await collection.InsertManyAsync(results);
                 _logger.LogInformation("Writing stock tech into Mongodb completed");
             }
             catch(Exception ex)
             {
                 _logger.LogError($"Writing stock tech into Mongodb error. {ex.ToString()}");
             }
-            #endregion
         }
     }
 }

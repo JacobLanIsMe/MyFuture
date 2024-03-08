@@ -28,8 +28,6 @@ namespace Caches.Caches
         public async Task SetStockRevenueCache()
         {
             List<string> stockIds = _stockRepository.GetStockIds();
-            MongoClient mongoClient = _mongoDbService.GetMongoClient();
-            var collection = mongoClient.GetDatabase("MyFuture").GetCollection<Stock<StockRevenueModel>>("Revenue");
             List<StockRevenueModel> results = new List<StockRevenueModel>();
             foreach (var stockId in stockIds)
             {
@@ -56,8 +54,11 @@ namespace Caches.Caches
             try
             {
                 _logger.LogInformation("Writing stock revenue into Mongodb started");
-                var filter = Builders<Stock<StockRevenueModel>>.Filter.Empty;
-                await _mongoDbService.InsertOrUpdateStock(collection, filter, new Stock<StockRevenueModel>() { Data = results });
+                MongoClient mongoClient = _mongoDbService.GetMongoClient();
+                var collection = mongoClient.GetDatabase("MyFuture").GetCollection<StockRevenueModel>("Revenue");
+                var filter = Builders<StockRevenueModel>.Filter.Empty;
+                await collection.DeleteManyAsync(filter);
+                await collection.InsertManyAsync(results);
                 _logger.LogInformation("Writing stock revenue into Mongodb completed");
             }
             catch(Exception ex)

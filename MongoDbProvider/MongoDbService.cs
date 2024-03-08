@@ -10,22 +10,19 @@ namespace MongoDbProvider
 {
     public class MongoDbService : IMongoDbService
     {
-        private MongoClient? mongoClient = null;
+        private string connString = string.Empty;
         public MongoDbService(IConfiguration config)
         {
-            var connString = config.GetConnectionString("Mongo");
+            connString = config.GetConnectionString("Mongo");
             if (connString == null)
             {
                 throw new Exception("Mongo DB connection string is missing.");    
             }
-            mongoClient = new MongoClient(connString);
+            
         }
         public MongoClient GetMongoClient()
         {
-            if (this.mongoClient == null)
-            {
-                throw new Exception("Mongo DB connection fails.");
-            }
+            MongoClient mongoClient = new MongoClient(connString);
             return mongoClient;
         }
         public async Task InsertOrUpdateStock<T>(IMongoCollection<T> collection, FilterDefinition<T> filter, T stock)
