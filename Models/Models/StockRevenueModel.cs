@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace Models.Models
 {
-    public class StockRevenueModel
+    public class StockRevenueModel : StockBaseModel
+    {
+        public List<StockRevenueDetailModel>? RevenueList { get; set; }
+    }
+    public class StockRevenueDetailModel
     {
         public string? Month { get; set; }
         public double Revenue { get; set; }

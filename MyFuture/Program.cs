@@ -1,7 +1,6 @@
 using Caches.Caches;
 using Caches.Interfaces;
 using MongoDbProvider;
-using MyFuture.BackgroundServices;
 using Repositories.Interfaces;
 using Repositories.Repositories;
 using Services.Interfaces;
@@ -26,11 +25,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IStockService, StockService>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddScoped<ICacheStockTech, CacheStockTech>();
-builder.Services.AddScoped<ICacheStockFinance, CacheStockFinance>();
+builder.Services.AddScoped<ICacheStockEps, CacheStockEps>();
 builder.Services.AddScoped<IMongoDbService, MongoDbService>();
 builder.Services.AddMemoryCache();
-builder.Services.AddHostedService<BackgroundStockTech>();
-builder.Services.AddHostedService<BackgroundStockFinance>();
 
 #region CORS
 var allowSpecificOrigins = "allowSpecificOrigins";

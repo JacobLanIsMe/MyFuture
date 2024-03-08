@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <None Update="IPO&amp;OTC.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

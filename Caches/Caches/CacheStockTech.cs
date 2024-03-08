@@ -6,6 +6,7 @@ using Repositories.Interfaces;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using MongoDbProvider;
+using Microsoft.Extensions.Logging;
 
 namespace Caches.Caches
 {
@@ -14,11 +15,13 @@ namespace Caches.Caches
         // private readonly IMemoryCache _memoryCache;
         private readonly IStockRepository _stockRepository;
         private readonly IMongoDbService _mongoDbService;
-        public CacheStockTech(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService)
+        private readonly ILogger<CacheStockTech> _logger;
+        public CacheStockTech(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger<CacheStockTech> logger)
         {
             // _memoryCache = memoryCache;
             _stockRepository = stockRepository;
             _mongoDbService = mongoDbService;
+            _logger = logger;
         }
         public async Task SetStockTechCache()
         {
@@ -53,12 +56,25 @@ namespace Caches.Caches
                     {
                         // _memoryCache.Set($"Tech{stockId}", stock);
                         results.Add(stock);
+                        _logger.LogInformation($"Stock: {stockId} gets its stock tech completed");
                     }
                 }
-                catch{}
+                catch(Exception ex)
+                {
+                    _logger.LogError($"Getting the tech of Stock: {stockId} occurred error {ex.ToString()}");
+                }
             }
-            var filter = Builders<Stock<StockTechInfoModel>>.Filter.Empty;
-            await _mongoDbService.InsertOrUpdateStock(collection, filter, new Stock<StockTechInfoModel>() { Data = results });
+            try
+            {
+                _logger.LogInformation("Writing stock tech into Mongodb started");
+                var filter = Builders<Stock<StockTechInfoModel>>.Filter.Empty;
+                await _mongoDbService.InsertOrUpdateStock(collection, filter, new Stock<StockTechInfoModel>() { Data = results });
+                _logger.LogInformation("Writing stock tech into Mongodb completed");
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Writing stock tech into Mongodb error. {ex.ToString()}");
+            }
             #endregion
         }
     }

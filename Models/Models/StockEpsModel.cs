@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace Models.Models
 {
-    public class StockEpsModel
+    public class StockEpsModel : StockBaseModel
+    {
+        public List<StockEpsDetailModel>? EpsList { get; set; }
+    }
+    public class StockEpsDetailModel
     {
         public string? Quarter { get; set; }
         public double Eps { get; set; }

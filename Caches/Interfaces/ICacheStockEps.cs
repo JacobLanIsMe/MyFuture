@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace Caches.Interfaces
 {
-    public interface ICacheStockFinance
+    public interface ICacheStockEps
     {
-        Task SetStockFinanceCache();
+        Task SetStockEpsCache();
     }
 }
