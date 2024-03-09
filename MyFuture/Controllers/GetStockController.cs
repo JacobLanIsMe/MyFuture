@@ -15,12 +15,12 @@ namespace MyFuture.Controllers
             _stockService = stockService;
         }
         [HttpGet("GetJumpEmptyStocks")]
-        public ApiDataResponseModel GetJumpEmptyStocks()
+        public async Task<ApiDataResponseModel> GetJumpEmptyStocks()
         {
             ApiDataResponseModel result = new ApiDataResponseModel();
             try
             {
-                result.Data = _stockService.GetJumpEmptyStocks();
+                result.Data = await _stockService.GetJumpEmptyStocks();
                 result.SetSuccess();
             }
             catch (Exception ex)
@@ -30,12 +30,12 @@ namespace MyFuture.Controllers
             return result;
         }
         [HttpGet("GetBullishPullbackStocks")]
-        public ApiDataResponseModel GetBullishPullbackStocks()
+        public async Task<ApiDataResponseModel> GetBullishPullbackStocks()
         {
             ApiDataResponseModel result = new ApiDataResponseModel();
             try
             {
-                result.Data = _stockService.GetBullishPullbackStocks();
+                result.Data = await _stockService.GetBullishPullbackStocks();
                 result.SetSuccess();
             }
             catch (Exception ex)

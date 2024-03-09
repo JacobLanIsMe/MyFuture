@@ -24,20 +24,20 @@ namespace Services.Services
             _mongoDbservice = mongoDbService;
             mongoClient = _mongoDbservice.GetMongoClient();
         }
-        public List<StockTechInfoModel> GetJumpEmptyStocks()
+        public async Task<List<StockTechInfoModel>> GetJumpEmptyStocks()
         {
-            List<StockTechInfoModel> selectedStocks = GetStockBySpecificStrategy(JumpEmptyStrategy);
+            List <StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(JumpEmptyStrategy);
             return selectedStocks;
         }
-        public List<StockTechInfoModel> GetBullishPullbackStocks()
+        public async Task<List<StockTechInfoModel>> GetBullishPullbackStocks()
         {
-            List<StockTechInfoModel> selectedStocks = GetStockBySpecificStrategy(BullishPullbackStrategy);
+            List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(BullishPullbackStrategy);
             return selectedStocks;
         }
-        private List<StockTechInfoModel> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy)
+        private async Task<List<StockTechInfoModel>> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy)
         {
             var techCollection = mongoClient.GetDatabase("MyFuture").GetCollection<StockTechInfoModel>("Tech");
-            List<StockTechInfoModel> allData = _mongoDbservice.GetAllData<StockTechInfoModel>(techCollection);
+            List<StockTechInfoModel> allData = await _mongoDbservice.GetAllData<StockTechInfoModel>(techCollection);
             List<StockTechInfoModel> results = new List<StockTechInfoModel>();
             foreach (var i in allData)
             {
@@ -136,35 +136,41 @@ namespace Services.Services
         }
         #endregion
 
-        public List<StockFinanceInfoModel> GetFinanceIncreasingStocks()
+        public async Task<List<StockFinanceInfoModel>> GetFinanceIncreasingStocks()
         {
-            var financeCollection = mongoClient.GetDatabase("MyFuture").GetCollection<Stock<StockFinanceInfoModel>>("Finance");
-            Stock<StockFinanceInfoModel> allData = _mongoDbservice.GetAllData<Stock<StockFinanceInfoModel>>(financeCollection).FirstOrDefault();
-            List<string> stockIds = _stockRepository.GetStockIds();
-            List<StockFinanceInfoModel> result = new List<StockFinanceInfoModel>();
-            foreach (var i in stockIds)
+            var database = mongoClient.GetDatabase("MyFuture");
+            var epsCollection = database.GetCollection<StockEpsModel>("EPS");
+            var revenueCollection = database.GetCollection<StockRevenueModel>("Revenue");
+            var getEpsTask = _mongoDbservice.GetAllData<StockEpsModel>(epsCollection);
+            var getRevenueTask = _mongoDbservice.GetAllData<StockRevenueModel>(revenueCollection);
+            List<StockEpsModel> epsInfos = await getEpsTask;
+            List<StockRevenueModel> revenueInfos = await getRevenueTask;
+            List<StockFinanceInfoModel> results = new List<StockFinanceInfoModel>();
+            foreach (var i in epsInfos)
             {
                 try
                 {
-                    // if (_memoryCache.TryGetValue<StockFinanceInfoModel>($"Finance{i}", out StockFinanceInfoModel? stock) && stock != null && stock.StockEpss != null)
-                    var stock = allData.Data.Where(x => x.StockId == i).FirstOrDefault();
-                    if (stock != null && stock.StockEpss != null && stock.StockRevenues != null)
+                    if (i.EpsList == null || i.EpsList.Count < 0) continue;
+                    bool hasNegativeEps = i.EpsList.Take(8).Any(x => x.Eps < 0);
+                    bool hasNegativeEpsYoy = i.EpsList.Take(2).Any(x => x.Yoy < 0);
+                    if (hasNegativeEps || hasNegativeEpsYoy) continue;
+                    var revenueStock = revenueInfos.Where(x => x.StockId == i.StockId).FirstOrDefault();
+                    if (revenueStock == null || revenueStock.RevenueList == null || revenueStock.RevenueList.Count < 3) continue;
+                    var hasNotTwoDigitGrowth = revenueStock.RevenueList.Take(3).Any(x => x.Yoy < 10);
+                    if (hasNotTwoDigitGrowth) continue;
+                    StockFinanceInfoModel model = new StockFinanceInfoModel
                     {
-                        var stockEpss = stock.StockEpss;
-                        var hasNegativeEps = stockEpss.Take(8).Any(x => x.Eps < 0);
-                        var hasNegativeEpsYoy = stockEpss.Take(2).Any(x => x.Yoy < 0);
-                        var stockRevenues = stock.StockRevenues;
-                        var hasNotTwoDigitGrowth = stockRevenues.Take(3).Any(x => x.Yoy < 10);
-                        //var hasNegativeRevenueYoy = stockRevenues.Take(3).Any(x=>x.Yoy < 0);
-                        if (!hasNegativeEps && !hasNegativeEpsYoy && !hasNotTwoDigitGrowth)
-                        {
-                            result.Add(stock);
-                        }
-                    }
+                        StockId = i.StockId,
+                        Name = i.Name
+                    };
+                    results.Add(model);
                 }
-                catch { }
+                catch(Exception ex)
+                {
+
+                }
             }
-            return result;
+            return results;
         }
 
 

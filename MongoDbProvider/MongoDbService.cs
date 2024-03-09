@@ -37,10 +37,10 @@ namespace MongoDbProvider
                 await collection.ReplaceOneAsync(filter, stock);
             }
         }
-        public List<T> GetAllData<T>(IMongoCollection<T> collection)
+        public async Task<List<T>> GetAllData<T>(IMongoCollection<T> collection)
         {
             var filter = Builders<T>.Filter.Empty;
-            return collection.Find(filter).ToList();
+            return await collection.Find(filter).ToListAsync();
         }
     }
 }

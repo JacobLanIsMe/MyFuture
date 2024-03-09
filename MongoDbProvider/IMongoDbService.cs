@@ -10,6 +10,6 @@ namespace MongoDbProvider
     {
         MongoClient GetMongoClient();
         Task InsertOrUpdateStock<T>(IMongoCollection<T> collection, FilterDefinition<T> filter, T stock);
-        List<T> GetAllData<T>(IMongoCollection<T> collection);
+        Task<List<T>> GetAllData<T>(IMongoCollection<T> collection);
     }
 }
