@@ -12,7 +12,8 @@ namespace Models.Models
     }
     public class StockEpsDetailModel
     {
-        public string? Quarter { get; set; }
+        public int Year { get; set; }
+        public int Quarter { get; set; }
         public double Eps { get; set; }
         public double Qoq { get; set; }
         public double Yoy { get; set; }

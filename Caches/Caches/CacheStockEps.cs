@@ -86,12 +86,14 @@ namespace Caches.Caches
                 var data = document.QuerySelectorAll("div#layout-col1 div.table-body-wrapper li");
                 foreach (var i in data)
                 {
-                    var quarter = i.QuerySelector("div>div>div").InnerHtml;
+                    var yearAndQuarter = i.QuerySelector("div>div>div").InnerHtml;
+                    var yearAndQuarterArray = yearAndQuarter.Split(" Q");
                     var finance = i.QuerySelectorAll("span");
-                    if (double.TryParse(finance[0].InnerHtml, out double eps) && double.TryParse(finance[1].InnerHtml.TrimEnd('%'), out double qoq) && double.TryParse(finance[2].InnerHtml.TrimEnd('%'), out double yoy))
+                    if (Int32.TryParse(yearAndQuarterArray[0], out int year) && Int32.TryParse(yearAndQuarterArray[1], out int quarter) && double.TryParse(finance[0].InnerHtml, out double eps) && double.TryParse(finance[1].InnerHtml.TrimEnd('%'), out double qoq) && double.TryParse(finance[2].InnerHtml.TrimEnd('%'), out double yoy))
                     {
                         StockEpsDetailModel model = new StockEpsDetailModel()
                         {
+                            Year = year,
                             Quarter = quarter,
                             Eps = eps,
                             Qoq = qoq,
