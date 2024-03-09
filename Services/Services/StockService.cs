@@ -36,49 +36,37 @@ namespace Services.Services
         }
         private List<StockTechInfoModel> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy)
         {
-            var techCollection = mongoClient.GetDatabase("MyFuture").GetCollection<Stock<StockTechInfoModel>>("Tech");
-            Stock<StockTechInfoModel> allData = _mongoDbservice.GetAllData<Stock<StockTechInfoModel>>(techCollection).FirstOrDefault();
-            List<string> stockIds = _stockRepository.GetStockIds();
-            List<StockTechInfoModel> result = new List<StockTechInfoModel>();
-            foreach (var i in stockIds)
+            var techCollection = mongoClient.GetDatabase("MyFuture").GetCollection<StockTechInfoModel>("Tech");
+            List<StockTechInfoModel> allData = _mongoDbservice.GetAllData<StockTechInfoModel>(techCollection);
+            List<StockTechInfoModel> results = new List<StockTechInfoModel>();
+            foreach (var i in allData)
             {
                 try
                 {
-                    // if (_memoryCache.TryGetValue<StockTechInfoModel>($"Tech{i}", out StockTechInfoModel? stock) && stock != null && stock.StockDetails != null)
-                    var stock = allData.Data.Where(x => x.StockId == i).FirstOrDefault();
-                    if (stock != null)
+                    List<StockTechDetailModel> stockDetails = i.StockDetails.OrderByDescending(x => x.t).ToList();
+                    var mv5 = stockDetails.Take(5).Select(x => x.v).Average();
+                    double bias60 = default;
+                    if (stockDetails.Count >= 60)
                     {
-                        List<StockTechDetailModel> stockDetails = stock.StockDetails.OrderByDescending(x => x.t).ToList();
-                        var mv5 = stockDetails.Take(5).Select(x => x.v).Average();
-                        #region 取得季線乖離率
-                        double bias60 = default;
-                        if (stockDetails.Count >= 60)
-                        {
-                            double ma60 = stockDetails.Take(60).Select(x => x.c).Average();
-                            bias60 = stockDetails.First().c / ma60;
-                        }
-                        #endregion
-                        bool isMatchStrategy = false;
-                        if (mv5 >= 200 && bias60 != default && bias60 <= 1.1)
-                        {
-                            isMatchStrategy = strategy(stockDetails);
-                        }
-
-                        if (isMatchStrategy)
-                        {
-                            StockTechInfoModel model = new StockTechInfoModel
-                            {
-                                StockId = stock.StockId,
-                                Name = stock.Name,
-                                StockDetails = stockDetails.Take(1).ToList()
-                            };
-                            result.Add(model);
-                        }
+                        double ma60 = stockDetails.Take(60).Select(x => x.c).Average();
+                        bias60 = stockDetails.First().c / ma60;
+                    }
+                    bool isMatchStrategy = false;
+                    if (mv5 >= 200 && bias60 != default && bias60 <= 1.1)
+                    {
+                        isMatchStrategy = strategy(stockDetails);
+                    }
+                    if (isMatchStrategy)
+                    {
+                        results.Add(i);
                     }
                 }
-                catch { }
+                catch(Exception ex)
+                {
+
+                }
             }
-            return result;
+            return results;
         }
 
 
