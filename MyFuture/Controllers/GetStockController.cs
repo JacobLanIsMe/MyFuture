@@ -45,12 +45,12 @@ namespace MyFuture.Controllers
             return result;
         }
         [HttpGet("GetFinanceIncreasingStocks")]
-        public ApiDataResponseModel GetFinanceIncreasingStocks()
+        public async Task<ApiDataResponseModel> GetFinanceIncreasingStocks()
         {
             ApiDataResponseModel result = new ApiDataResponseModel();
             try
             {
-                result.Data = _stockService.GetFinanceIncreasingStocks();
+                result.Data = await _stockService.GetFinanceIncreasingStocks();
                 result.SetSuccess();
             }
             catch (Exception ex)
