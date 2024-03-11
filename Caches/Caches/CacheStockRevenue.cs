@@ -19,21 +19,24 @@ namespace Caches.Caches
         private readonly IStockRepository _stockRepository;
         private readonly IMongoDbService _mongoDbService;
         private readonly ILogger<CacheStockRevenue> _logger;
-        public CacheStockRevenue(IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger<CacheStockRevenue> logger)
+        private readonly IHttpClientFactory _httpClientFactory;
+        public CacheStockRevenue(IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger<CacheStockRevenue> logger, IHttpClientFactory httpClientFactory)
         {
             _stockRepository = stockRepository;
             _mongoDbService = mongoDbService;
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
         public async Task SetStockRevenueCache()
         {
             List<string> stockIds = _stockRepository.GetStockIds();
+            HttpClient client = _httpClientFactory.CreateClient();
             List<StockRevenueModel> results = new List<StockRevenueModel>();
-            foreach (var stockId in stockIds)
+            foreach (var stockId in stockIds.Take(3))
             {
                 try
                 {
-                    var (name, revenue) = await GetStockNameAndRevenue(stockId);
+                    var (name, revenue) = await GetStockNameAndRevenue(stockId, client);
                     StockRevenueModel stock = new StockRevenueModel
                     {
                         StockId = stockId,
@@ -66,9 +69,8 @@ namespace Caches.Caches
                 _logger.LogError($"Writing stock revenue into Mongodb error. {ex.ToString()}");
             }
         }
-        private async Task<(string? name, List<StockRevenueDetailModel> revenue)> GetStockNameAndRevenue(string stockId)
+        private async Task<(string? name, List<StockRevenueDetailModel> revenue)> GetStockNameAndRevenue(string stockId, HttpClient client)
         {
-            HttpClient client = new HttpClient();
             string url = $"https://tw.stock.yahoo.com/quote/{stockId}.TW/revenue";
             var responseMsg = await client.GetAsync(url);
             string? name = null;

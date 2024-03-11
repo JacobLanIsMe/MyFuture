@@ -21,22 +21,25 @@ namespace Caches.Caches
         private readonly IStockRepository _stockRepository;
         private readonly IMongoDbService _mongoDbService;
         private readonly ILogger<CacheStockEps> _logger;
-        public CacheStockEps(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger<CacheStockEps> logger)
+        private readonly IHttpClientFactory _httpClientFactory;
+        public CacheStockEps(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger<CacheStockEps> logger, IHttpClientFactory httpClientFactory)
         {
             // _memoryCache = memoryCache;
             _stockRepository = stockRepository;
             _mongoDbService = mongoDbService;
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
         public async Task SetStockEpsCache()
         {
             List<string> stockIds = _stockRepository.GetStockIds();
+            HttpClient client = _httpClientFactory.CreateClient();
             List<StockEpsModel> results = new List<StockEpsModel>();
             foreach (var stockId in stockIds)
             {
                 try
                 {
-                    var (name, eps) = await GetStockNameAndEPS(stockId);
+                    var (name, eps) = await GetStockNameAndEPS(stockId, client);
                     StockEpsModel stock = new StockEpsModel
                     {
                         StockId = stockId,
@@ -70,9 +73,8 @@ namespace Caches.Caches
                 _logger.LogError($"Writing stock EPS into Mongodb error. {ex.ToString()}");
             }
         }
-        private async Task<(string? name, List<StockEpsDetailModel> eps)> GetStockNameAndEPS(string stockId)
+        private async Task<(string? name, List<StockEpsDetailModel> eps)> GetStockNameAndEPS(string stockId, HttpClient client)
         {
-            HttpClient client = new HttpClient();
             string url = $"https://tw.stock.yahoo.com/quote/{stockId}.TW/eps";
             var responseMsg = await client.GetAsync(url);
             string? name = null;

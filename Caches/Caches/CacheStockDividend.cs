@@ -15,17 +15,19 @@ namespace Caches.Caches
         private readonly IStockRepository _stockRepository;
         private readonly IMongoDbService _mongoDbService;
         private readonly ILogger<CacheStockDividend> _logger;
-
-        public CacheStockDividend(IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger<CacheStockDividend> logger)
+        private readonly IHttpClientFactory _httpClientFactory;
+        public CacheStockDividend(IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger<CacheStockDividend> logger, IHttpClientFactory httpClientFactory)
         {
             _stockRepository = stockRepository;
             _mongoDbService = mongoDbService;
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task SetStockDividendCache()
         {
             List<string> stockIds = _stockRepository.GetStockIds(); // 取得所有的 stockId
+            HttpClient client = _httpClientFactory.CreateClient();
             foreach (var stockId in stockIds)
             {
                 try

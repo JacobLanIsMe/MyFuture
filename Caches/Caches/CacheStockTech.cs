@@ -29,9 +29,9 @@ namespace Caches.Caches
         public async Task SetStockTechCache()
         {
             List<string> stockIds = _stockRepository.GetStockIds(); // 取得所有的 stockId
-            List<StockTechInfoModel> results = new List<StockTechInfoModel>();
             HttpClient client = _httpClientFactory.CreateClient();
-            foreach (var stockId in stockIds.Take(4))
+            List<StockTechInfoModel> results = new List<StockTechInfoModel>();
+            foreach (var stockId in stockIds)
             {
                 try
                 {

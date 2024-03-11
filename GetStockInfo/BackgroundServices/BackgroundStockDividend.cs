@@ -21,7 +21,7 @@ namespace GetStockInfo.BackgroundServices
                 try
                 {
                     //取得所有的 StockInfo，並寫入
-                    //await _cacheStockDividend.SetStockDividendCache();
+                    await _cacheStockDividend.SetStockDividendCache();
                 }
                 catch (Exception ex)
                 {

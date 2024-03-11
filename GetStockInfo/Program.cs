@@ -52,7 +52,7 @@ class Program
             services.AddScoped<ICacheStockRevenue, CacheStockRevenue>();
             services.AddScoped<IStockRepository, StockRepository>();
             services.AddScoped<IMongoDbService, MongoDbService>();
-            services.AddHostedService<BackgroundStockTech>();
+            //services.AddHostedService<BackgroundStockTech>();
             //services.AddHostedService<BackgroundStockEps>();
             //services.AddHostedService<BackgroundStockRevenue>();
             //services.AddHostedService<WriteStockInfoToMemory>();

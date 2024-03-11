@@ -8,5 +8,6 @@ namespace Caches.Interfaces
 {
     public interface ICacheStockDividend
     {
+        Task SetStockDividendCache();
     }
 }
