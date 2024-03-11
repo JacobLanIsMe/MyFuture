@@ -11,5 +11,6 @@ namespace MongoDbProvider
         MongoClient GetMongoClient();
         Task InsertOrUpdateStock<T>(IMongoCollection<T> collection, FilterDefinition<T> filter, T stock);
         Task<List<T>> GetAllData<T>(IMongoCollection<T> collection);
+        Task DeleteAndInsertManyData<T>(string collectionName, List<T> values);
     }
 }

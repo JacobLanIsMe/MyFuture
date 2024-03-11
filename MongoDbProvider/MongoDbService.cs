@@ -42,5 +42,13 @@ namespace MongoDbProvider
             var filter = Builders<T>.Filter.Empty;
             return await collection.Find(filter).ToListAsync();
         }
+        public async Task DeleteAndInsertManyData<T>(string collectionName, List<T> values)
+        {
+            MongoClient mongoClient = GetMongoClient();
+            var collection = mongoClient.GetDatabase("MyFuture").GetCollection<T>(collectionName);
+            var filter = Builders<T>.Filter.Empty;
+            await collection.DeleteManyAsync(filter);
+            await collection.InsertManyAsync(values);
+        }
     }
 }

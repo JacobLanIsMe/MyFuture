@@ -1,5 +1,7 @@
-﻿using Caches.Interfaces;
+﻿using AngleSharp.Html.Parser;
+using Caches.Interfaces;
 using Microsoft.Extensions.Logging;
+using Models.Models;
 using MongoDbProvider;
 using Repositories.Interfaces;
 using System;
@@ -7,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Caches.Caches
 {
@@ -28,16 +31,60 @@ namespace Caches.Caches
         {
             List<string> stockIds = _stockRepository.GetStockIds(); // 取得所有的 stockId
             HttpClient client = _httpClientFactory.CreateClient();
+            List<StockDividendModel> results = new List<StockDividendModel>();
             foreach (var stockId in stockIds)
             {
                 try
                 {
-                    
+                    string url = $"https://tw.stock.yahoo.com/quote/{stockId}.TW/dividend";
+                    var responseMsg = await client.GetAsync(url);
+                    if (responseMsg.IsSuccessStatusCode)
+                    {
+                        var response = await responseMsg.Content.ReadAsStringAsync();
+                        HtmlParser parser = new HtmlParser();
+                        var document = await parser.ParseDocumentAsync(response);
+                        string name = document.QuerySelector("div#main-0-QuoteHeader-Proxy>div>div>h1").InnerHtml;
+                        if (string.IsNullOrEmpty(name)) continue;
+                        StockDividendModel stock = new StockDividendModel
+                        {
+                            StockId = stockId,
+                            Name = name,
+                            DividendList = new List<StockDevidendDetailModel>()
+                        };
+                        var data = document.QuerySelectorAll("div#layout-col1 div.table-body-wrapper li");
+                        foreach (var i in data)
+                        {
+                            var allDiv = i.QuerySelectorAll("div>div");
+                            var yearString = allDiv.Skip(2).FirstOrDefault().InnerHtml;
+                            var allSpan = i.QuerySelectorAll("span");
+                            var cashDividendString = allSpan.FirstOrDefault().InnerHtml;
+                            var stockDividendString = allSpan.Skip(1).FirstOrDefault().InnerHtml;
+                            if (!Int32.TryParse(yearString.Split('Q')[0], out int year)) continue;
+                            StockDevidendDetailModel stockDevidendDetailModel = new StockDevidendDetailModel();
+                            stockDevidendDetailModel.Year = year;
+                            stockDevidendDetailModel.CashDividend = double.TryParse(cashDividendString, out double cashDividend) ? cashDividend : 0;
+                            stockDevidendDetailModel.StockDividend = double.TryParse(stockDividendString, out double stockDividend) ? stockDividend : 0;
+                            stock.DividendList.Add(stockDevidendDetailModel);
+                        }
+                        results.Add(stock);
+                        _logger.LogInformation($"Stock: {stockId} gets its dividend completed");
+                    }
                 }
                 catch(Exception ex) 
                 {
-                    
+                    _logger.LogError($"Getting the dividend of Stock: {stockId} occurred error {ex.ToString()}");
                 }
+            }
+
+            try
+            {
+                _logger.LogInformation("Writing stock dividend into Mongodb started");
+                await _mongoDbService.DeleteAndInsertManyData<StockDividendModel>("Dividend", results);
+                _logger.LogInformation("Writing stock dividend into Mongodb completed");
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Writing stock dividend into Mongodb error. {ex.ToString()}");
             }
         }
     }

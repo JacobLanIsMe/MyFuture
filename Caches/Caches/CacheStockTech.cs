@@ -67,11 +67,7 @@ namespace Caches.Caches
             try
             {
                 _logger.LogInformation("Writing stock tech into Mongodb started");
-                MongoClient mongoClient = _mongoDbService.GetMongoClient();
-                var collection = mongoClient.GetDatabase("MyFuture").GetCollection<StockTechInfoModel> ("Tech");
-                var filter = Builders<StockTechInfoModel>.Filter.Empty;
-                await collection.DeleteManyAsync(filter);
-                await collection.InsertManyAsync(results);
+                await _mongoDbService.DeleteAndInsertManyData<StockTechInfoModel>("Tech", results);
                 _logger.LogInformation("Writing stock tech into Mongodb completed");
             }
             catch(Exception ex)
