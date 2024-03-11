@@ -32,7 +32,7 @@ namespace Caches.Caches
             List<string> stockIds = _stockRepository.GetStockIds();
             HttpClient client = _httpClientFactory.CreateClient();
             List<StockRevenueModel> results = new List<StockRevenueModel>();
-            foreach (var stockId in stockIds.Take(3))
+            foreach (var stockId in stockIds)
             {
                 try
                 {
