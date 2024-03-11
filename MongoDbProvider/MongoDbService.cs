@@ -13,7 +13,7 @@ namespace MongoDbProvider
         private string connString = string.Empty;
         public MongoDbService(IConfiguration config)
         {
-            connString = config.GetConnectionString("Mongo");
+            connString = Environment.GetEnvironmentVariable("Mongodb");
             if (connString == null)
             {
                 throw new Exception("Mongo DB connection string is missing.");    

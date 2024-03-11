@@ -26,7 +26,17 @@ namespace Caches.Caches
         public async Task SetStockDividendCache()
         {
             List<string> stockIds = _stockRepository.GetStockIds(); // 取得所有的 stockId
-
+            foreach (var stockId in stockIds)
+            {
+                try
+                {
+                    
+                }
+                catch(Exception ex) 
+                {
+                    
+                }
+            }
         }
     }
 }

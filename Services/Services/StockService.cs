@@ -13,14 +13,12 @@ namespace Services.Services
     public class StockService : IStockService
     {
         // private readonly IMemoryCache _memoryCache;
-        private readonly IStockRepository _stockRepository;
         private readonly IMongoDbService _mongoDbservice;
         private MongoClient mongoClient;
         //private readonly ILogger<StockService> _logger;
-        public StockService(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService, IConfiguration config)
+        public StockService(/* IMemoryCache memoryCache,  */IMongoDbService mongoDbService, IConfiguration config)
         {
             // _memoryCache = memoryCache;
-            _stockRepository = stockRepository;
             _mongoDbservice = mongoDbService;
             mongoClient = _mongoDbservice.GetMongoClient();
         }

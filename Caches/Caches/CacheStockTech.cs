@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using MongoDbProvider;
 using Microsoft.Extensions.Logging;
+using Amazon.Runtime;
 
 namespace Caches.Caches
 {
@@ -16,22 +17,24 @@ namespace Caches.Caches
         private readonly IStockRepository _stockRepository;
         private readonly IMongoDbService _mongoDbService;
         private readonly ILogger<CacheStockTech> _logger;
-        public CacheStockTech(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger<CacheStockTech> logger)
+        private readonly IHttpClientFactory _httpClientFactory;
+        public CacheStockTech(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger<CacheStockTech> logger, IHttpClientFactory httpClientFactory)
         {
             // _memoryCache = memoryCache;
             _stockRepository = stockRepository;
             _mongoDbService = mongoDbService;
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
         public async Task SetStockTechCache()
         {
             List<string> stockIds = _stockRepository.GetStockIds(); // 取得所有的 stockId
             List<StockTechInfoModel> results = new List<StockTechInfoModel>();
-            foreach (var stockId in stockIds)
+            HttpClient client = _httpClientFactory.CreateClient();
+            foreach (var stockId in stockIds.Take(4))
             {
                 try
                 {
-                    HttpClient client = new HttpClient();
                     string url = $"https://tw.quote.finance.yahoo.net/quote/q?type=ta&perd=d&mkt=10&sym={stockId}&v=1&callback=jQuery111306311117094962886_1574862886629&_=1574862886630";
                     var responseMsg = await client.GetAsync(url);
                     string? detail = null;

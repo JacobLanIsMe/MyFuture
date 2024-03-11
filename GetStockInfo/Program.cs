@@ -46,15 +46,16 @@ class Program
         })
         .ConfigureServices((hostContext, services) =>
         {
+            services.AddHttpClient();
             services.AddScoped<ICacheStockTech, CacheStockTech>();
             services.AddScoped<ICacheStockEps, CacheStockEps>();
             services.AddScoped<ICacheStockRevenue, CacheStockRevenue>();
             services.AddScoped<IStockRepository, StockRepository>();
             services.AddScoped<IMongoDbService, MongoDbService>();
             services.AddHostedService<BackgroundStockTech>();
-            services.AddHostedService<BackgroundStockEps>();
-            services.AddHostedService<BackgroundStockRevenue>();
+            //services.AddHostedService<BackgroundStockEps>();
+            //services.AddHostedService<BackgroundStockRevenue>();
             //services.AddHostedService<WriteStockInfoToMemory>();
-            services.AddMemoryCache();
+            //services.AddMemoryCache();
         });
 }
