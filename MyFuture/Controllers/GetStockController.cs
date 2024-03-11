@@ -59,5 +59,20 @@ namespace MyFuture.Controllers
             }
             return result;
         }
+        [HttpGet("GetHighYieldStocks")]
+        public async Task<ApiDataResponseModel> GetHighYieldStocks()
+        {
+            ApiDataResponseModel result = new ApiDataResponseModel();
+            try
+            {
+                result.Data = await _stockService.GetHighYieldStocks();
+                result.SetSuccess();
+            }
+            catch (Exception ex)
+            {
+                result.SetError(ex.Message, ex.ToString());
+            }
+            return result;
+        }
     }
 }

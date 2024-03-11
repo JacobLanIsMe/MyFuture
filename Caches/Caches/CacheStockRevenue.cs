@@ -80,7 +80,9 @@ namespace Caches.Caches
                 var data = document.QuerySelectorAll("div#main-3-QuoteFinanceRevenue-Proxy section#qsp-revenue-table div.table-body-wrapper>ul>li");
                 foreach (var i in data)
                 {
-                    var month = i.QuerySelector("div>div>div").InnerHtml;
+                    var yearAndMonthString = i.QuerySelector("div>div>div").InnerHtml;
+                    string[] yearAndMonthArray = yearAndMonthString.Split('/');
+                    if (!Int32.TryParse(yearAndMonthArray[0], out int year) || !Int32.TryParse(yearAndMonthArray[1], out int month)) continue;
                     var revenueInfo = i.QuerySelectorAll("li span");
                     var revenueString = revenueInfo[0].InnerHtml.Replace(",", "");
                     var momString = revenueInfo[1].InnerHtml.TrimEnd('%');
@@ -90,6 +92,7 @@ namespace Caches.Caches
                     {
                         StockRevenueDetailModel model = new StockRevenueDetailModel
                         {
+                            Year = year,
                             Month = month,
                             Revenue = revenue,
                             Mom = mom,

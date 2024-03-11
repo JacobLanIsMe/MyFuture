@@ -12,7 +12,8 @@ namespace Models.Models
     }
     public class StockRevenueDetailModel
     {
-        public string? Month { get; set; }
+        public int Year { get; set; }
+        public int Month { get; set; }
         public double Revenue { get; set; }
         public double Mom { get; set; }
         public double LastYearRevenue { get; set; }

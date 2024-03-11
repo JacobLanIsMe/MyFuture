@@ -14,13 +14,12 @@ namespace Services.Services
     {
         // private readonly IMemoryCache _memoryCache;
         private readonly IMongoDbService _mongoDbservice;
-        private MongoClient mongoClient;
-        //private readonly ILogger<StockService> _logger;
+        private MongodbConfigModel _mongodbConfig;
         public StockService(/* IMemoryCache memoryCache,  */IMongoDbService mongoDbService, IConfiguration config)
         {
             // _memoryCache = memoryCache;
             _mongoDbservice = mongoDbService;
-            mongoClient = _mongoDbservice.GetMongoClient();
+            _mongodbConfig = config.GetSection("Mongodb").Get<MongodbConfigModel>();
         }
         public async Task<List<StockTechInfoModel>> GetJumpEmptyStocks()
         {
@@ -34,7 +33,7 @@ namespace Services.Services
         }
         private async Task<List<StockTechInfoModel>> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy)
         {
-            var techCollection = mongoClient.GetDatabase("MyFuture").GetCollection<StockTechInfoModel>("Tech");
+            var techCollection = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name).GetCollection<StockTechInfoModel>(EnumCollection.Tech.ToString());
             List<StockTechInfoModel> allData = await _mongoDbservice.GetAllData<StockTechInfoModel>(techCollection);
             List<StockTechInfoModel> results = new List<StockTechInfoModel>();
             foreach (var i in allData)
@@ -136,9 +135,9 @@ namespace Services.Services
 
         public async Task<List<StockFinanceInfoModel>> GetFinanceIncreasingStocks()
         {
-            var database = mongoClient.GetDatabase("MyFuture");
-            var epsCollection = database.GetCollection<StockEpsModel>("EPS");
-            var revenueCollection = database.GetCollection<StockRevenueModel>("Revenue");
+            var database = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name);
+            var epsCollection = database.GetCollection<StockEpsModel>(EnumCollection.EPS.ToString());
+            var revenueCollection = database.GetCollection<StockRevenueModel>(EnumCollection.Revenue.ToString());
             var getEpsTask = _mongoDbservice.GetAllData<StockEpsModel>(epsCollection);
             var getRevenueTask = _mongoDbservice.GetAllData<StockRevenueModel>(revenueCollection);
             List<StockEpsModel> epsInfos = await getEpsTask;
@@ -169,6 +168,30 @@ namespace Services.Services
                 }
             }
             return results;
+        }
+        public async Task<List<StockBaseModel>> GetHighYieldStocks()
+        {
+            var database = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name);
+            var epsCollection = database.GetCollection<StockEpsModel>(EnumCollection.EPS.ToString());
+            var revenueCollection = database.GetCollection<StockRevenueModel>(EnumCollection.Revenue.ToString());
+            var dividendCollection = database.GetCollection<StockDividendModel>(EnumCollection.Dividend.ToString());
+            var epsTask = _mongoDbservice.GetAllData<StockEpsModel>(epsCollection);
+            var revenueTask = _mongoDbservice.GetAllData<StockRevenueModel>(revenueCollection);
+            var dividendTask = _mongoDbservice.GetAllData<StockDividendModel>(dividendCollection);
+            List<StockEpsModel> epsInfos = await epsTask;
+            List<StockRevenueModel> revenueInfos = await revenueTask;
+            List<StockDividendModel> dividendInfos = await dividendTask;
+            int thisYear = DateTime.Now.Year;
+            List<StockEpsModel> epsMatch = epsInfos.Where(x => x.EpsList.Where(y => y.Year == thisYear - 1 && y.Quarter < 4).Sum(y => y.Eps) >= x.EpsList.Where(y => y.Year == thisYear - 2).Sum(y => y.Eps)).ToList();
+            List<string> revenueMatch = revenueInfos.Where(x => x.RevenueList.Where(y => y.Year == thisYear - 1 && y.Month > 9).Sum(y => y.Revenue) > x.RevenueList.Where(y => y.Year == thisYear - 2 && y.Month > 9).Sum(y => y.Revenue)).Select(x => x.StockId).ToList();
+            List<StockEpsModel> bothEpsAndRevenueMatch = epsMatch.Where(x => revenueMatch.Contains(x.StockId)).ToList();
+            foreach (var i in bothEpsAndRevenueMatch)
+            {
+                
+            }
+
+
+            return new List<StockBaseModel>();
         }
     }
 }
