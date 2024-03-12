@@ -23,12 +23,12 @@ namespace Caches.Caches
         public async Task SetStockRevenueCache()
         {
             List<string> stockIds = _stockRepository.GetStockIds();
-            HttpClient client = _httpClientFactory.CreateClient();
             List<StockRevenueModel> results = new List<StockRevenueModel>();
             foreach (var stockId in stockIds)
             {
                 try
                 {
+                    HttpClient client = _httpClientFactory.CreateClient();
                     var (name, revenue) = await GetStockNameAndRevenue(stockId, client);
                     StockRevenueModel stock = new StockRevenueModel
                     {

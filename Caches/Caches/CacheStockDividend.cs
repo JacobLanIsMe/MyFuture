@@ -24,12 +24,12 @@ namespace Caches.Caches
         public async Task SetStockDividendCache()
         {
             List<string> stockIds = _stockRepository.GetStockIds(); // 取得所有的 stockId
-            HttpClient client = _httpClientFactory.CreateClient();
             List<StockDividendModel> results = new List<StockDividendModel>();
             foreach (var stockId in stockIds)
             {
                 try
                 {
+                    HttpClient client = _httpClientFactory.CreateClient();
                     string url = $"https://tw.stock.yahoo.com/quote/{stockId}.TW/dividend";
                     var responseMsg = await client.GetAsync(url);
                     if (responseMsg.IsSuccessStatusCode)
