@@ -37,10 +37,7 @@ class Program
             .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: true)
             .AddJsonFile(path: $"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true);
         })
-        .UseSerilog((hostingContext, loggerConfig) =>
-        {
-            loggerConfig.ReadFrom.Configuration(hostingContext.Configuration);
-        })
+        .UseSerilog((hostingContext, loggerConfig) => loggerConfig.ReadFrom.Configuration(hostingContext.Configuration))
         .ConfigureServices((hostContext, services) =>
         {
             services.AddHttpClient();
