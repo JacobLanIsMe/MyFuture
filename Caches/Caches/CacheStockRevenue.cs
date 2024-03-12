@@ -1,9 +1,12 @@
-﻿using AngleSharp.Html.Parser;
+﻿using Amazon.Runtime.Documents.Internal.Transform;
+using AngleSharp.Dom;
+using AngleSharp.Html.Parser;
 using Caches.Interfaces;
 using Models.Models;
 using MongoDbProvider;
 using Repositories.Interfaces;
 using Serilog;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Caches.Caches
 {
@@ -58,26 +61,28 @@ namespace Caches.Caches
         }
         private async Task<(string? name, List<StockRevenueDetailModel> revenue)> GetStockNameAndRevenue(string stockId, HttpClient client)
         {
-            string url = $"https://tw.stock.yahoo.com/quote/{stockId}.TW/revenue";
+            string url = $"https://histock.tw/stock/{stockId}/%E8%B2%A1%E5%8B%99%E5%A0%B1%E8%A1%A8";
             var responseMsg = await client.GetAsync(url);
-            string? name = null;
-            List<StockRevenueDetailModel> details = new List<StockRevenueDetailModel>();
             if (!responseMsg.IsSuccessStatusCode) throw new Exception($"Cannot receive successful response when getting the revenue of stock {stockId}");
             var response = await responseMsg.Content.ReadAsStringAsync();
             HtmlParser parser = new HtmlParser();
             var document = await parser.ParseDocumentAsync(response);
-            name = document.QuerySelector("div#main-0-QuoteHeader-Proxy>div>div>h1").InnerHtml;
-            var data = document.QuerySelectorAll("div#main-3-QuoteFinanceRevenue-Proxy section#qsp-revenue-table div.table-body-wrapper>ul>li");
+            string name = document.QuerySelector("div.info-left a") == null ? string.Empty : document.QuerySelector("div.info-left a").InnerHtml;
+            List<StockRevenueDetailModel> details = new List<StockRevenueDetailModel>();
+            var data = document.QuerySelectorAll("table.tb-stock tr").Skip(2);
             foreach (var i in data)
             {
-                var yearAndMonthString = i.QuerySelector("div>div>div").InnerHtml;
+                var epsYearInfo = i.QuerySelectorAll("td");
+                if (epsYearInfo == null || epsYearInfo.Count() < 5) continue;
+                var yearAndMonthString = epsYearInfo.FirstOrDefault().InnerHtml;
                 string[] yearAndMonthArray = yearAndMonthString.Split('/');
                 if (!Int32.TryParse(yearAndMonthArray[0], out int year) || !Int32.TryParse(yearAndMonthArray[1], out int month)) continue;
-                var revenueInfo = i.QuerySelectorAll("li span");
-                var revenueString = revenueInfo[0].InnerHtml.Replace(",", "");
-                var momString = revenueInfo[1].InnerHtml.TrimEnd('%');
-                var lastYearRevenueString = revenueInfo[2].InnerHtml.Replace(",", "");
-                var yoyString = revenueInfo[3].InnerHtml.TrimEnd('%');
+
+                string revenueString = epsYearInfo.Skip(1).FirstOrDefault().InnerHtml.Replace(','.ToString(), "");
+                string lastYearRevenueString = epsYearInfo.Skip(2).FirstOrDefault().InnerHtml.Replace(','.ToString(), "");
+                string momString = epsYearInfo.Skip(3).FirstOrDefault().QuerySelector("span") == null ? string.Empty : epsYearInfo.Skip(3).FirstOrDefault().QuerySelector("span").InnerHtml.TrimEnd('%');
+                string yoyString = epsYearInfo.Skip(4).FirstOrDefault().QuerySelector("span") == null ? string.Empty : epsYearInfo.Skip(4).FirstOrDefault().QuerySelector("span").InnerHtml.TrimEnd('%');
+              
                 if (double.TryParse(revenueString, out double revenue) && double.TryParse(momString, out double mom) && double.TryParse(lastYearRevenueString, out double lastYearRevenue) && double.TryParse(yoyString, out double yoy))
                 {
                     StockRevenueDetailModel model = new StockRevenueDetailModel

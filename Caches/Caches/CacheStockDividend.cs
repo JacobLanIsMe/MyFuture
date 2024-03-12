@@ -30,40 +30,38 @@ namespace Caches.Caches
             {
                 try
                 {
-                    string url = $"https://tw.stock.yahoo.com/quote/{stockId}.TW/dividend";
+                    string url = $"https://histock.tw/stock/{stockId}/%E9%99%A4%E6%AC%8A%E9%99%A4%E6%81%AF";
                     var responseMsg = await client.GetAsync(url);
-                    if (responseMsg.IsSuccessStatusCode)
+                    if (!responseMsg.IsSuccessStatusCode) throw new Exception($"Cannot receive successful response when getting the dividend of stock {stockId}");
+                    var response = await responseMsg.Content.ReadAsStringAsync();
+                    HtmlParser parser = new HtmlParser();
+                    var document = await parser.ParseDocumentAsync(response);
+                    string name = document.QuerySelector("div.info-left a") == null ? string.Empty : document.QuerySelector("div.info-left a").InnerHtml;
+                    if (string.IsNullOrEmpty(name)) throw new Exception($"Cannot retrieve the name of stock {stockId} when getting the dividend of stock {stockId}"); ;
+                    StockDividendModel stock = new StockDividendModel
                     {
-                        var response = await responseMsg.Content.ReadAsStringAsync();
-                        HtmlParser parser = new HtmlParser();
-                        var document = await parser.ParseDocumentAsync(response);
-                        string name = document.QuerySelector("div#main-0-QuoteHeader-Proxy>div>div>h1").InnerHtml;
-                        if (string.IsNullOrEmpty(name)) throw new Exception($"Cannot retrieve the name of stock {stockId} when getting the dividend of stock {stockId}"); ;
-                        StockDividendModel stock = new StockDividendModel
-                        {
-                            StockId = stockId,
-                            Name = name,
-                            DividendList = new List<StockDevidendDetailModel>()
-                        };
-                        var data = document.QuerySelectorAll("div#layout-col1 div.table-body-wrapper li");
-                        foreach (var i in data)
-                        {
-                            var allDiv = i.QuerySelectorAll("div>div");
-                            var yearString = allDiv.Skip(2).FirstOrDefault().InnerHtml;
-                            var allSpan = i.QuerySelectorAll("span");
-                            var cashDividendString = allSpan.FirstOrDefault().InnerHtml;
-                            var stockDividendString = allSpan.Skip(1).FirstOrDefault().InnerHtml;
-                            int year = 0;
-                            if (!Int32.TryParse(yearString.Split('Q')[0], out year) && !Int32.TryParse(yearString.Split('H')[0], out year)) continue;
-                            StockDevidendDetailModel stockDevidendDetailModel = new StockDevidendDetailModel();
-                            stockDevidendDetailModel.Year = year;
-                            stockDevidendDetailModel.CashDividend = double.TryParse(cashDividendString, out double cashDividend) ? cashDividend : 0;
-                            stockDevidendDetailModel.StockDividend = double.TryParse(stockDividendString, out double stockDividend) ? stockDividend : 0;
-                            stock.DividendList.Add(stockDevidendDetailModel);
-                        }
-                        results.Add(stock);
-                        _logger.Information($"Stock: {stockId} gets its dividend completed");
+                        StockId = stockId,
+                        Name = name,
+                        DividendList = new List<StockDevidendDetailModel>()
+                    };
+                    var data = document.QuerySelectorAll("table.tb-stock tr").Skip(2);
+                    if (data == null || data.Count() == 0) throw new Exception($"Stock {stockId} does not have dividend information");
+                    foreach (var i in data)
+                    {
+                        var allTd = i.QuerySelectorAll("td");
+                        if (allTd == null || allTd.Count() < 7) continue;
+                        var yearString = allTd.FirstOrDefault().InnerHtml;
+                        var cashDividendString = allTd.Skip(6).FirstOrDefault().InnerHtml;
+                        var stockDividendString = allTd.Skip(5).FirstOrDefault().InnerHtml;
+                        if (!Int32.TryParse(yearString, out int year)) continue;
+                        StockDevidendDetailModel stockDevidendDetailModel = new StockDevidendDetailModel();
+                        stockDevidendDetailModel.Year = year;
+                        stockDevidendDetailModel.CashDividend = double.TryParse(cashDividendString, out double cashDividend) ? cashDividend : 0;
+                        stockDevidendDetailModel.StockDividend = double.TryParse(stockDividendString, out double stockDividend) ? stockDividend : 0;
+                        stock.DividendList.Add(stockDevidendDetailModel);
                     }
+                    results.Add(stock);
+                    _logger.Information($"Stock: {stockId} gets its dividend completed");
                 }
                 catch(Exception ex) 
                 {

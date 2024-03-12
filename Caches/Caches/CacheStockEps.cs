@@ -61,34 +61,59 @@ namespace Caches.Caches
         }
         private async Task<(string? name, List<StockEpsDetailModel> eps)> GetStockNameAndEPS(string stockId, HttpClient client)
         {
-            string url = $"https://tw.stock.yahoo.com/quote/{stockId}.TW/eps";
+            string url = $"https://histock.tw/stock/{stockId}/%E6%AF%8F%E8%82%A1%E7%9B%88%E9%A4%98";
             var responseMsg = await client.GetAsync(url);
-            string? name = null;
-            List<StockEpsDetailModel> details = new List<StockEpsDetailModel>();
             if (!responseMsg.IsSuccessStatusCode) throw new Exception($"Cannot receive successful response when getting the EPS of stock {stockId}");
             var response = await responseMsg.Content.ReadAsStringAsync();
             HtmlParser parser = new HtmlParser();
             var document = await parser.ParseDocumentAsync(response);
-            name = document.QuerySelector("div#main-0-QuoteHeader-Proxy>div>div>h1").InnerHtml;
-            var data = document.QuerySelectorAll("div#layout-col1 div.table-body-wrapper li");
-            foreach (var i in data)
+            string name = document.QuerySelector("div.info-left a") == null ? string.Empty : document.QuerySelector("div.info-left a").InnerHtml;
+            List<StockEpsDetailModel> details = new List<StockEpsDetailModel>();
+            
+            var data = document.QuerySelectorAll("table.tb-stock tr");
+            if (data == null || data.Count() < 6) throw new Exception($"Stock {stockId} does not have EPS information");
+            var yearHeader = data.FirstOrDefault().QuerySelectorAll("th").Skip(1);
+            List<int> years = new List<int>();
+            foreach (var i in yearHeader)
             {
-                var yearAndQuarter = i.QuerySelector("div>div>div").InnerHtml;
-                var yearAndQuarterArray = yearAndQuarter.Split(" Q");
-                var finance = i.QuerySelectorAll("span");
-                if (Int32.TryParse(yearAndQuarterArray[0], out int year) && Int32.TryParse(yearAndQuarterArray[1], out int quarter) && double.TryParse(finance[0].InnerHtml, out double eps) && double.TryParse(finance[1].InnerHtml.TrimEnd('%'), out double qoq) && double.TryParse(finance[2].InnerHtml.TrimEnd('%'), out double yoy))
+                string yearString = i.InnerHtml;
+                if (!Int32.TryParse(yearString, out int year)) continue;
+                years.Add(year);
+            }
+            if (years.Count == 0) throw new Exception($"Stock {stockId} does not have EPS information");
+            for (int i = 1; i <= 4; i++)
+            {
+                for (int j = 0; j < years.Count; j++)
                 {
-                    StockEpsDetailModel model = new StockEpsDetailModel()
+                    var epsString = data.Skip(i).FirstOrDefault().QuerySelectorAll("td").Skip(j).FirstOrDefault().InnerHtml;
+                    if (!double.TryParse(epsString, out double eps)) continue;
+                    StockEpsDetailModel model = new StockEpsDetailModel
                     {
-                        Year = year,
-                        Quarter = quarter,
-                        Eps = eps,
-                        Qoq = qoq,
-                        Yoy = yoy
+                        Year = years[j],
+                        Quarter = i,
+                        Eps = eps
                     };
                     details.Add(model);
-                };
+                }
             }
+            details = details.OrderByDescending(x=>x.Year).ThenByDescending(x=>x.Quarter).ToList();
+            for (int i = 0; i < details.Count - 1; i++)
+            {
+                double qoq = Math.Abs(((details[i].Eps / details[i + 1].Eps) - 1) * 100);
+                details[i].Qoq = details[i].Eps > details[i + 1].Eps ? qoq * 1 : qoq * -1;
+            }
+            for (int i = 1; i <= 4; i++)
+            {
+                for (int j = 0; j < years.Count - 1; j++)
+                {
+                    StockEpsDetailModel? lastData = details.Where(x => x.Year == years[j] && x.Quarter == i).FirstOrDefault();
+                    StockEpsDetailModel? thisData = details.Where(x => x.Year == years[j+1] && x.Quarter == i).FirstOrDefault();
+                    if (lastData == null || thisData == null) continue;
+                    double yoy = Math.Abs(((thisData.Eps / lastData.Eps) - 1) * 100);
+                    thisData.Yoy = thisData.Eps > lastData.Eps ? yoy * 1 : yoy * -1;
+                }
+            }
+
             return (name, details);
         }
     }
