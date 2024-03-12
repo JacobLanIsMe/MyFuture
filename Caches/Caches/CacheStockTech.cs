@@ -25,12 +25,12 @@ namespace Caches.Caches
         public async Task SetStockTechCache()
         {
             List<string> stockIds = _stockRepository.GetStockIds(); // 取得所有的 stockId
+            HttpClient client = _httpClientFactory.CreateClient();
             List<StockTechInfoModel> results = new List<StockTechInfoModel>();
             foreach (var stockId in stockIds)
             {
                 try
                 {
-                    HttpClient client = _httpClientFactory.CreateClient();
                     string url = $"https://tw.quote.finance.yahoo.net/quote/q?type=ta&perd=d&mkt=10&sym={stockId}&v=1&callback=jQuery111306311117094962886_1574862886629&_=1574862886630";
                     var responseMsg = await client.GetAsync(url);
                     string? detail = null;

@@ -25,12 +25,12 @@ namespace Caches.Caches
         public async Task SetStockEpsCache()
         {
             List<string> stockIds = _stockRepository.GetStockIds();
+            HttpClient client = _httpClientFactory.CreateClient();
             List<StockEpsModel> results = new List<StockEpsModel>();
             foreach (var stockId in stockIds)
             {
                 try
                 {
-                    HttpClient client = _httpClientFactory.CreateClient();
                     var (name, eps) = await GetStockNameAndEPS(stockId, client);
                     StockEpsModel stock = new StockEpsModel
                     {
