@@ -3,6 +3,7 @@ using Caches.Interfaces;
 using MongoDbProvider;
 using Repositories.Interfaces;
 using Repositories.Repositories;
+using Serilog;
 using Services.Interfaces;
 using Services.Services;
 
@@ -17,7 +18,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "RedisTest";
 });
 #endregion
-
+builder.Host.UseSerilog((hostingContext, loggerConfig) => loggerConfig.ReadFrom.Configuration(hostingContext.Configuration));
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

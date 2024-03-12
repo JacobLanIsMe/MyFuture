@@ -7,6 +7,7 @@ using MongoDbProvider;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using System.Collections.ObjectModel;
+using Serilog;
 
 namespace Services.Services
 {
@@ -15,11 +16,13 @@ namespace Services.Services
         // private readonly IMemoryCache _memoryCache;
         private readonly IMongoDbService _mongoDbservice;
         private MongodbConfigModel _mongodbConfig;
-        public StockService(/* IMemoryCache memoryCache,  */IMongoDbService mongoDbService, IConfiguration config)
+        private readonly ILogger _logger;
+        public StockService(/* IMemoryCache memoryCache,  */IMongoDbService mongoDbService, IConfiguration config, ILogger logger)
         {
             // _memoryCache = memoryCache;
             _mongoDbservice = mongoDbService;
             _mongodbConfig = config.GetSection("Mongodb").Get<MongodbConfigModel>();
+            _logger = logger;
         }
         public async Task<List<StockTechInfoModel>> GetJumpEmptyStocks()
         {
@@ -175,23 +178,54 @@ namespace Services.Services
             var epsCollection = database.GetCollection<StockEpsModel>(EnumCollection.EPS.ToString());
             var revenueCollection = database.GetCollection<StockRevenueModel>(EnumCollection.Revenue.ToString());
             var dividendCollection = database.GetCollection<StockDividendModel>(EnumCollection.Dividend.ToString());
+            var techCollection = database.GetCollection<StockTechInfoModel>(EnumCollection.Tech.ToString());
             var epsTask = _mongoDbservice.GetAllData<StockEpsModel>(epsCollection);
             var revenueTask = _mongoDbservice.GetAllData<StockRevenueModel>(revenueCollection);
             var dividendTask = _mongoDbservice.GetAllData<StockDividendModel>(dividendCollection);
+            var techTask = _mongoDbservice.GetAllData<StockTechInfoModel>(techCollection);
             List<StockEpsModel> epsInfos = await epsTask;
             List<StockRevenueModel> revenueInfos = await revenueTask;
             List<StockDividendModel> dividendInfos = await dividendTask;
+            List<StockTechInfoModel> techInfos = await techTask;
             int thisYear = DateTime.Now.Year;
             List<StockEpsModel> epsMatch = epsInfos.Where(x => x.EpsList.Where(y => y.Year == thisYear - 1 && y.Quarter < 4).Sum(y => y.Eps) >= x.EpsList.Where(y => y.Year == thisYear - 2).Sum(y => y.Eps)).ToList();
             List<string> revenueMatch = revenueInfos.Where(x => x.RevenueList.Where(y => y.Year == thisYear - 1 && y.Month > 9).Sum(y => y.Revenue) > x.RevenueList.Where(y => y.Year == thisYear - 2 && y.Month > 9).Sum(y => y.Revenue)).Select(x => x.StockId).ToList();
             List<StockEpsModel> bothEpsAndRevenueMatch = epsMatch.Where(x => revenueMatch.Contains(x.StockId)).ToList();
+            List<StockBaseModel> results = new List<StockBaseModel>();
             foreach (var i in bothEpsAndRevenueMatch)
             {
-                int year = thisYear - 2;
-                
+                try
+                {
+                    StockDividendModel dividendMatch = dividendInfos.Where(x => x.StockId == i.StockId).FirstOrDefault();
+                    StockTechInfoModel techMatch = techInfos.Where(x => x.StockId == i.StockId).FirstOrDefault();
+                    if (i.EpsList == null || i.EpsList.Count == 0 || dividendMatch == null || techMatch == null || techMatch.StockDetails == null || techMatch.StockDetails.Count == 0) continue;
+                    List<double> payoutRatioList = new List<double>();
+                    int count = 2;
+                    for (int j = 2; j < 7; j++)
+                    {
+                        List<StockEpsDetailModel> yearEps = i.EpsList.Where(x => x.Year == thisYear - j).ToList();
+                        List<StockDevidendDetailModel> yearDividend = dividendMatch.DividendList.Where(x => x.Year == thisYear - j).ToList();
+                        if (yearEps == null || yearEps.Count == 0 || yearDividend == null || yearDividend.Count == 0) continue;
+                        double eps = yearEps.Sum(x => x.Eps);
+                        double dividend = yearDividend.Sum(x => x.CashDividend);
+                        double payoutRatio = dividend / eps;
+                        payoutRatioList.Add(payoutRatio);
+                    }
+                    double averagePayoutRatio = payoutRatioList.Average();
+                    List<StockEpsDetailModel> lastYearEpsList = i.EpsList.Where(x => x.Year == thisYear - 1).ToList();
+                    double lastYearEps = lastYearEpsList.Sum(x => x.Eps);
+                    double todayClose = techMatch.StockDetails.TakeLast(1).FirstOrDefault().c;
+                    double predictYield = (lastYearEps * averagePayoutRatio) / todayClose;
+                    if ((lastYearEpsList.Count == 4 && predictYield > 0.07) || (lastYearEpsList.Count < 4 && predictYield > 0.03))
+                    {
+                        results.Add(new StockBaseModel() { StockId = i.StockId, Name = i.Name });
+                    }
+                }
+                catch(Exception ex) 
+                {
+                    throw new Exception($"Stock: {i.StockId} with {ex.ToString()}");
+                }
             }
-
-
             return new List<StockBaseModel>();
         }
     }

@@ -53,7 +53,8 @@ namespace Caches.Caches
                             var allSpan = i.QuerySelectorAll("span");
                             var cashDividendString = allSpan.FirstOrDefault().InnerHtml;
                             var stockDividendString = allSpan.Skip(1).FirstOrDefault().InnerHtml;
-                            if (!Int32.TryParse(yearString.Split('Q')[0], out int year)) continue;
+                            int year = 0;
+                            if (!Int32.TryParse(yearString.Split('Q')[0], out year) && !Int32.TryParse(yearString.Split('H')[0], out year)) continue;
                             StockDevidendDetailModel stockDevidendDetailModel = new StockDevidendDetailModel();
                             stockDevidendDetailModel.Year = year;
                             stockDevidendDetailModel.CashDividend = double.TryParse(cashDividendString, out double cashDividend) ? cashDividend : 0;
