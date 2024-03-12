@@ -1,17 +1,9 @@
 ﻿using AngleSharp.Html.Parser;
 using Caches.Interfaces;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 using Models.Models;
-using MongoDB.Driver;
 using MongoDbProvider;
 using Repositories.Interfaces;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Serilog;
 
 namespace Caches.Caches
 {
@@ -20,9 +12,9 @@ namespace Caches.Caches
         // private readonly IMemoryCache _memoryCache;
         private readonly IStockRepository _stockRepository;
         private readonly IMongoDbService _mongoDbService;
-        private readonly ILogger<CacheStockEps> _logger;
+        private readonly ILogger _logger;
         private readonly IHttpClientFactory _httpClientFactory;
-        public CacheStockEps(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger<CacheStockEps> logger, IHttpClientFactory httpClientFactory)
+        public CacheStockEps(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger logger, IHttpClientFactory httpClientFactory)
         {
             // _memoryCache = memoryCache;
             _stockRepository = stockRepository;
@@ -46,27 +38,25 @@ namespace Caches.Caches
                         Name = name,
                         EpsList = eps
                     };
-                    if (!string.IsNullOrEmpty(stock.Name))
-                    {
-                        // _memoryCache.Set($"Finance{stockId}", stock);
-                        results.Add(stock);
-                        _logger.LogInformation($"Stock: {stockId} gets its EPS completed");
-                    }
+                    if (string.IsNullOrEmpty(stock.Name)) throw new Exception($"Cannot retrieve the name of stock {stockId} when getting the EPS of stock {stockId}");
+                    // _memoryCache.Set($"Finance{stockId}", stock);
+                    results.Add(stock);
+                    _logger.Information($"Stock: {stockId} gets its EPS completed");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Getting the EPS of Stock: {stockId} occurred error {ex.ToString()}");
+                    _logger.Error($"Getting the EPS of Stock: {stockId} occurred error {ex.ToString()}");
                 }
             }
             try
             {
-                _logger.LogInformation("Writing stock EPS into Mongodb started");
+                _logger.Information("Writing stock EPS into Mongodb started");
                 await _mongoDbService.DeleteAndInsertManyData<StockEpsModel>("EPS", results);
-                _logger.LogInformation("Writing stock EPS into Mongodb completed");
+                _logger.Information("Writing stock EPS into Mongodb completed");
             }
             catch(Exception ex)
             {
-                _logger.LogError($"Writing stock EPS into Mongodb error. {ex.ToString()}");
+                _logger.Error($"Writing stock EPS into Mongodb error. {ex.ToString()}");
             }
         }
         private async Task<(string? name, List<StockEpsDetailModel> eps)> GetStockNameAndEPS(string stockId, HttpClient client)
@@ -75,34 +65,31 @@ namespace Caches.Caches
             var responseMsg = await client.GetAsync(url);
             string? name = null;
             List<StockEpsDetailModel> details = new List<StockEpsDetailModel>();
-            if (responseMsg.IsSuccessStatusCode)
+            if (!responseMsg.IsSuccessStatusCode) throw new Exception($"Cannot receive successful response when getting the EPS of stock {stockId}");
+            var response = await responseMsg.Content.ReadAsStringAsync();
+            HtmlParser parser = new HtmlParser();
+            var document = await parser.ParseDocumentAsync(response);
+            name = document.QuerySelector("div#main-0-QuoteHeader-Proxy>div>div>h1").InnerHtml;
+            var data = document.QuerySelectorAll("div#layout-col1 div.table-body-wrapper li");
+            foreach (var i in data)
             {
-                var response = await responseMsg.Content.ReadAsStringAsync();
-                HtmlParser parser = new HtmlParser();
-                var document = await parser.ParseDocumentAsync(response);
-                name = document.QuerySelector("div#main-0-QuoteHeader-Proxy>div>div>h1").InnerHtml;
-                var data = document.QuerySelectorAll("div#layout-col1 div.table-body-wrapper li");
-                foreach (var i in data)
+                var yearAndQuarter = i.QuerySelector("div>div>div").InnerHtml;
+                var yearAndQuarterArray = yearAndQuarter.Split(" Q");
+                var finance = i.QuerySelectorAll("span");
+                if (Int32.TryParse(yearAndQuarterArray[0], out int year) && Int32.TryParse(yearAndQuarterArray[1], out int quarter) && double.TryParse(finance[0].InnerHtml, out double eps) && double.TryParse(finance[1].InnerHtml.TrimEnd('%'), out double qoq) && double.TryParse(finance[2].InnerHtml.TrimEnd('%'), out double yoy))
                 {
-                    var yearAndQuarter = i.QuerySelector("div>div>div").InnerHtml;
-                    var yearAndQuarterArray = yearAndQuarter.Split(" Q");
-                    var finance = i.QuerySelectorAll("span");
-                    if (Int32.TryParse(yearAndQuarterArray[0], out int year) && Int32.TryParse(yearAndQuarterArray[1], out int quarter) && double.TryParse(finance[0].InnerHtml, out double eps) && double.TryParse(finance[1].InnerHtml.TrimEnd('%'), out double qoq) && double.TryParse(finance[2].InnerHtml.TrimEnd('%'), out double yoy))
+                    StockEpsDetailModel model = new StockEpsDetailModel()
                     {
-                        StockEpsDetailModel model = new StockEpsDetailModel()
-                        {
-                            Year = year,
-                            Quarter = quarter,
-                            Eps = eps,
-                            Qoq = qoq,
-                            Yoy = yoy
-                        };
-                        details.Add(model);
+                        Year = year,
+                        Quarter = quarter,
+                        Eps = eps,
+                        Qoq = qoq,
+                        Yoy = yoy
                     };
-                }
+                    details.Add(model);
+                };
             }
             return (name, details);
         }
-        
     }
 }

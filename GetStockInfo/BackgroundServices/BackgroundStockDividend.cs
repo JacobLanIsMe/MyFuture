@@ -1,14 +1,14 @@
 ﻿using Caches.Interfaces;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace GetStockInfo.BackgroundServices
 {
     public class BackgroundStockDividend : BackgroundService
     {
         private readonly ICacheStockDividend _cacheStockDividend;
-        private readonly ILogger<BackgroundStockDividend> _logger;
-        public BackgroundStockDividend(ICacheStockDividend cacheStockDividend, ILogger<BackgroundStockDividend> logger)
+        private readonly ILogger _logger;
+        public BackgroundStockDividend(ICacheStockDividend cacheStockDividend, ILogger logger)
         {
             _cacheStockDividend = cacheStockDividend;
             _logger = logger;
@@ -25,7 +25,7 @@ namespace GetStockInfo.BackgroundServices
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex.ToString());
+                    _logger.Error(ex.ToString());
                 }
                 await Task.Delay(TimeSpan.FromMinutes(60));
             }

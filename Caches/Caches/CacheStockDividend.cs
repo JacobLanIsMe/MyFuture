@@ -1,15 +1,9 @@
 ﻿using AngleSharp.Html.Parser;
 using Caches.Interfaces;
-using Microsoft.Extensions.Logging;
 using Models.Models;
 using MongoDbProvider;
 using Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+using Serilog;
 
 namespace Caches.Caches
 {
@@ -17,9 +11,9 @@ namespace Caches.Caches
     {
         private readonly IStockRepository _stockRepository;
         private readonly IMongoDbService _mongoDbService;
-        private readonly ILogger<CacheStockDividend> _logger;
+        private readonly ILogger _logger;
         private readonly IHttpClientFactory _httpClientFactory;
-        public CacheStockDividend(IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger<CacheStockDividend> logger, IHttpClientFactory httpClientFactory)
+        public CacheStockDividend(IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger logger, IHttpClientFactory httpClientFactory)
         {
             _stockRepository = stockRepository;
             _mongoDbService = mongoDbService;
@@ -44,7 +38,7 @@ namespace Caches.Caches
                         HtmlParser parser = new HtmlParser();
                         var document = await parser.ParseDocumentAsync(response);
                         string name = document.QuerySelector("div#main-0-QuoteHeader-Proxy>div>div>h1").InnerHtml;
-                        if (string.IsNullOrEmpty(name)) continue;
+                        if (string.IsNullOrEmpty(name)) throw new Exception($"Cannot retrieve the name of stock {stockId} when getting the dividend of stock {stockId}"); ;
                         StockDividendModel stock = new StockDividendModel
                         {
                             StockId = stockId,
@@ -67,24 +61,24 @@ namespace Caches.Caches
                             stock.DividendList.Add(stockDevidendDetailModel);
                         }
                         results.Add(stock);
-                        _logger.LogInformation($"Stock: {stockId} gets its dividend completed");
+                        _logger.Information($"Stock: {stockId} gets its dividend completed");
                     }
                 }
                 catch(Exception ex) 
                 {
-                    _logger.LogError($"Getting the dividend of Stock: {stockId} occurred error {ex.ToString()}");
+                    _logger.Error($"Getting the dividend of Stock: {stockId} occurred error {ex.ToString()}");
                 }
             }
 
             try
             {
-                _logger.LogInformation("Writing stock dividend into Mongodb started");
+                _logger.Information("Writing stock dividend into Mongodb started");
                 await _mongoDbService.DeleteAndInsertManyData<StockDividendModel>("Dividend", results);
-                _logger.LogInformation("Writing stock dividend into Mongodb completed");
+                _logger.Information("Writing stock dividend into Mongodb completed");
             }
             catch(Exception ex)
             {
-                _logger.LogError($"Writing stock dividend into Mongodb error. {ex.ToString()}");
+                _logger.Error($"Writing stock dividend into Mongodb error. {ex.ToString()}");
             }
         }
     }

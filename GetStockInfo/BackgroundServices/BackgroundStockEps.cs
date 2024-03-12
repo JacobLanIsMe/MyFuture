@@ -1,20 +1,14 @@
 ﻿using Caches.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Serilog;
 
 namespace GetStockInfo.BackgroundServices
 {
     public class BackgroundStockEps : BackgroundService
     {
-        private readonly ILogger<BackgroundStockEps> _logger;
+        private readonly ILogger _logger;
         private readonly ICacheStockEps _cacheStockEps;
-        public BackgroundStockEps(ILogger<BackgroundStockEps> logger, ICacheStockEps cacheStockEps)
+        public BackgroundStockEps(ILogger logger, ICacheStockEps cacheStockEps)
         {
             _logger = logger;
             _cacheStockEps = cacheStockEps;
@@ -31,7 +25,7 @@ namespace GetStockInfo.BackgroundServices
                 }
                 catch (Exception ex) 
                 {
-                    _logger.LogError(ex.ToString());
+                    _logger.Error(ex.ToString());
                 }
                 await Task.Delay(TimeSpan.FromMinutes(60));
             }

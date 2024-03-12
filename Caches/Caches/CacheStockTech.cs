@@ -1,13 +1,9 @@
 ﻿using Models.Models;
 using System.Text.Json;
-using Microsoft.Extensions.Caching.Memory;
 using Caches.Interfaces;
 using Repositories.Interfaces;
-using Microsoft.Extensions.Configuration;
-using MongoDB.Driver;
 using MongoDbProvider;
-using Microsoft.Extensions.Logging;
-using Amazon.Runtime;
+using Serilog;
 
 namespace Caches.Caches
 {
@@ -16,9 +12,9 @@ namespace Caches.Caches
         // private readonly IMemoryCache _memoryCache;
         private readonly IStockRepository _stockRepository;
         private readonly IMongoDbService _mongoDbService;
-        private readonly ILogger<CacheStockTech> _logger;
+        private readonly ILogger _logger;
         private readonly IHttpClientFactory _httpClientFactory;
-        public CacheStockTech(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger<CacheStockTech> logger, IHttpClientFactory httpClientFactory)
+        public CacheStockTech(/* IMemoryCache memoryCache,  */IStockRepository stockRepository, IMongoDbService mongoDbService, ILogger logger, IHttpClientFactory httpClientFactory)
         {
             // _memoryCache = memoryCache;
             _stockRepository = stockRepository;
@@ -41,38 +37,33 @@ namespace Caches.Caches
                     string? name = null;
                     StockTechInfoModel stock = new StockTechInfoModel();
                     List<StockTechDetailModel> stockDetails = new List<StockTechDetailModel>();
-
-                    if (responseMsg.IsSuccessStatusCode)
-                    {
-                        var data = await responseMsg.Content.ReadAsStringAsync();
-                        detail = data.Split("\"ta\":")[1].Split(",\"ex\"")[0];
-                        name = data.Split("\"name\":\"")[1].Split('\"')[0];
-                    }
+                    if (!responseMsg.IsSuccessStatusCode) throw new Exception($"Cannot receive successful response when getting the tech of stock {stockId}");
+                    var data = await responseMsg.Content.ReadAsStringAsync();
+                    detail = data.Split("\"ta\":")[1].Split(",\"ex\"")[0];
+                    name = data.Split("\"name\":\"")[1].Split('\"')[0];
+                    
                     stockDetails = JsonSerializer.Deserialize<List<StockTechDetailModel>>(detail);
                     stock.StockDetails = stockDetails;
                     stock.Name = name;
                     stock.StockId = stockId;
-                    if (!string.IsNullOrEmpty(name))
-                    {
-                        // _memoryCache.Set($"Tech{stockId}", stock);
-                        results.Add(stock);
-                        _logger.LogInformation($"Stock: {stockId} gets its stock tech completed");
-                    }
+                    if (string.IsNullOrEmpty(name)) throw new Exception($"Cannot retrieve the name of stock {stockId} when getting the tech of stock {stockId}");
+                    results.Add(stock);
+                    _logger.Information($"Stock: {stockId} gets its stock tech completed");
                 }
                 catch(Exception ex)
                 {
-                    _logger.LogError($"Getting the tech of Stock: {stockId} occurred error {ex.ToString()}");
+                    _logger.Error($"Getting the tech of Stock: {stockId} occurred error {ex.ToString()}");
                 }
             }
             try
             {
-                _logger.LogInformation("Writing stock tech into Mongodb started");
+                _logger.Information("Writing stock tech into Mongodb started");
                 await _mongoDbService.DeleteAndInsertManyData<StockTechInfoModel>("Tech", results);
-                _logger.LogInformation("Writing stock tech into Mongodb completed");
+                _logger.Information("Writing stock tech into Mongodb completed");
             }
             catch(Exception ex)
             {
-                _logger.LogError($"Writing stock tech into Mongodb error. {ex.ToString()}");
+                _logger.Error($"Writing stock tech into Mongodb error. {ex.ToString()}");
             }
         }
     }

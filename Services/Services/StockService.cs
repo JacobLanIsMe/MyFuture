@@ -187,6 +187,7 @@ namespace Services.Services
             List<StockEpsModel> bothEpsAndRevenueMatch = epsMatch.Where(x => revenueMatch.Contains(x.StockId)).ToList();
             foreach (var i in bothEpsAndRevenueMatch)
             {
+                int year = thisYear - 2;
                 
             }
 

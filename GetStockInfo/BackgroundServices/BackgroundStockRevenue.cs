@@ -1,16 +1,14 @@
-﻿using Amazon.Runtime.Internal.Util;
-using Caches.Caches;
-using Caches.Interfaces;
+﻿using Caches.Interfaces;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace GetStockInfo.BackgroundServices
 {
     public class BackgroundStockRevenue : BackgroundService
     {
-        private readonly ILogger<BackgroundStockRevenue> _logger;
+        private readonly ILogger _logger;
         private readonly ICacheStockRevenue _cacheStockRevenue;
-        public BackgroundStockRevenue(ILogger<BackgroundStockRevenue> logger, ICacheStockRevenue cacheStockRevenue)
+        public BackgroundStockRevenue(ILogger logger, ICacheStockRevenue cacheStockRevenue)
         {
             _logger = logger;
             _cacheStockRevenue = cacheStockRevenue;
@@ -26,7 +24,7 @@ namespace GetStockInfo.BackgroundServices
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex.ToString());
+                    _logger.Error(ex.ToString());
                 }
                 await Task.Delay(TimeSpan.FromMinutes(60));
             }

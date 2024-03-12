@@ -1,15 +1,13 @@
-﻿using Amazon.Runtime.Internal.Util;
-using Caches.Caches;
+﻿using Caches.Caches;
 using Caches.Interfaces;
 using GetStockInfo.BackgroundServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using MongoDbProvider;
 using Repositories.Interfaces;
 using Repositories.Repositories;
-using System.Threading.Tasks;
+using Serilog;
 
 class Program
 {
@@ -33,16 +31,15 @@ class Program
                 config.AddCommandLine(args);
             }
         })
-          .ConfigureAppConfiguration((hostContext, config) =>
-          {
-              config.SetBasePath(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location))
-               .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: true)
-               .AddJsonFile(path: $"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true);
-          })
-        .ConfigureLogging(logging =>
+        .ConfigureAppConfiguration((hostContext, config) =>
         {
-            logging.ClearProviders();
-            logging.AddConsole();
+            config.SetBasePath(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location))
+            .AddJsonFile(path: "appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile(path: $"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+        })
+        .UseSerilog((hostingContext, loggerConfig) =>
+        {
+            loggerConfig.ReadFrom.Configuration(hostingContext.Configuration);
         })
         .ConfigureServices((hostContext, services) =>
         {
