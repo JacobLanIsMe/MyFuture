@@ -150,9 +150,9 @@ namespace Services.Services
             {
                 try
                 {
-                    if (i.EpsList == null || i.EpsList.Count < 0) continue;
-                    bool hasNegativeEps = i.EpsList.Take(8).Any(x => x.Eps < 0);
-                    bool hasNegativeEpsYoy = i.EpsList.Take(2).Any(x => x.Yoy < 0);
+                    if (i.EpsList == null || i.EpsList.Count < 8) continue;
+                    bool hasNegativeEps = i.EpsList.Take(8).Any(x => x.Eps <= 0);
+                    bool hasNegativeEpsYoy = i.EpsList.Take(2).Any(x => x.Yoy <= 0);
                     if (hasNegativeEps || hasNegativeEpsYoy) continue;
                     var revenueStock = revenueInfos.Where(x => x.StockId == i.StockId).FirstOrDefault();
                     if (revenueStock == null || revenueStock.RevenueList == null || revenueStock.RevenueList.Count < 3) continue;
@@ -188,8 +188,8 @@ namespace Services.Services
             List<StockDividendModel> dividendInfos = await dividendTask;
             List<StockTechInfoModel> techInfos = await techTask;
             int thisYear = DateTime.Now.Year;
-            List<StockEpsModel> epsMatch = epsInfos.Where(x => x.EpsList.Where(y => y.Year == thisYear - 1 && y.Quarter < 4).Sum(y => y.Eps) >= x.EpsList.Where(y => y.Year == thisYear - 2).Sum(y => y.Eps)).ToList();
-            List<string> revenueMatch = revenueInfos.Where(x => x.RevenueList.Where(y => y.Year == thisYear - 1 && y.Month > 9).Sum(y => y.Revenue) > x.RevenueList.Where(y => y.Year == thisYear - 2 && y.Month > 9).Sum(y => y.Revenue)).Select(x => x.StockId).ToList();
+            List<StockEpsModel> epsMatch = epsInfos.Where(x => x.EpsList.Where(y => y.Year == thisYear - 2).Count() == 4 && (x.EpsList.Where(y => y.Year == thisYear - 1 && y.Quarter < 4).Sum(y => y.Eps) >= x.EpsList.Where(y => y.Year == thisYear - 2).Sum(y => y.Eps))).ToList();
+            List<string> revenueMatch = revenueInfos.Where(x => x.RevenueList.Where(y => y.Year == thisYear - 1 && y.Month > 9).Count() == 3 && x.RevenueList.Where(y => y.Year == thisYear - 2 && y.Month > 9).Count() == 3 && (x.RevenueList.Where(y => y.Year == thisYear - 1 && y.Month > 9).Sum(y => y.Revenue) > x.RevenueList.Where(y => y.Year == thisYear - 2 && y.Month > 9).Sum(y => y.Revenue))).Select(x => x.StockId).ToList();
             List<StockEpsModel> bothEpsAndRevenueMatch = epsMatch.Where(x => revenueMatch.Contains(x.StockId)).ToList();
             List<StockBaseModel> results = new List<StockBaseModel>();
             foreach (var i in bothEpsAndRevenueMatch)
@@ -208,11 +208,13 @@ namespace Services.Services
                         if (yearEps == null || yearEps.Count == 0 || yearDividend == null || yearDividend.Count == 0) continue;
                         double eps = yearEps.Sum(x => x.Eps);
                         double dividend = yearDividend.Sum(x => x.CashDividend);
-                        double payoutRatio = dividend / eps;
+                        double payoutRatio = eps == 0 ? 0 : dividend / eps;
                         payoutRatioList.Add(payoutRatio);
                     }
+                    if (payoutRatioList.Count == 0) continue;
                     double averagePayoutRatio = payoutRatioList.Average();
                     List<StockEpsDetailModel> lastYearEpsList = i.EpsList.Where(x => x.Year == thisYear - 1).ToList();
+                    if (lastYearEpsList.Count == 0) continue;
                     double lastYearEps = lastYearEpsList.Sum(x => x.Eps);
                     double todayClose = techMatch.StockDetails.TakeLast(1).FirstOrDefault().c;
                     double predictYield = (lastYearEps * averagePayoutRatio) / todayClose;
@@ -226,7 +228,7 @@ namespace Services.Services
                     throw new Exception($"Stock: {i.StockId} with {ex.ToString()}");
                 }
             }
-            return new List<StockBaseModel>();
+            return results;
         }
     }
 }
