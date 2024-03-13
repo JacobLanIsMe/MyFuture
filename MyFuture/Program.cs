@@ -12,11 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 #region Redis
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
-    options.InstanceName = "RedisTest";
-});
+//builder.Services.AddStackExchangeRedisCache(options =>
+//{
+//    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+//    options.InstanceName = "RedisTest";
+//});
 #endregion
 builder.Host.UseSerilog((hostingContext, loggerConfig) => loggerConfig.ReadFrom.Configuration(hostingContext.Configuration));
 builder.Services.AddControllers();
