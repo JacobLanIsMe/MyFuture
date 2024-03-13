@@ -99,6 +99,11 @@ namespace Caches.Caches
             details = details.OrderByDescending(x=>x.Year).ThenByDescending(x=>x.Quarter).ToList();
             for (int i = 0; i < details.Count - 1; i++)
             {
+                if (details[i].Eps == 0 || details[i+1].Eps == 0)
+                {
+                    details[i].Qoq = 0;
+                    continue;
+                }
                 double qoq = Math.Abs(((details[i].Eps / details[i + 1].Eps) - 1) * 100);
                 details[i].Qoq = details[i].Eps > details[i + 1].Eps ? qoq * 1 : qoq * -1;
             }
@@ -109,11 +114,16 @@ namespace Caches.Caches
                     StockEpsDetailModel? lastData = details.Where(x => x.Year == years[j] && x.Quarter == i).FirstOrDefault();
                     StockEpsDetailModel? thisData = details.Where(x => x.Year == years[j+1] && x.Quarter == i).FirstOrDefault();
                     if (lastData == null || thisData == null) continue;
+                    if (thisData.Eps == 0 || lastData.Eps == 0)
+                    {
+                        thisData.Yoy = 0;
+                        continue;
+                    }
                     double yoy = Math.Abs(((thisData.Eps / lastData.Eps) - 1) * 100);
                     thisData.Yoy = thisData.Eps > lastData.Eps ? yoy * 1 : yoy * -1;
                 }
             }
-
+            
             return (name, details);
         }
     }
