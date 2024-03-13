@@ -174,6 +174,7 @@ namespace Services.Services
         }
         public async Task<List<StockBaseModel>> GetHighYieldStocks()
         {
+            _logger.Information("Getting stock information from MongoDB started");
             var database = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name);
             var epsCollection = database.GetCollection<StockEpsModel>(EnumCollection.EPS.ToString());
             var revenueCollection = database.GetCollection<StockRevenueModel>(EnumCollection.Revenue.ToString());
@@ -187,6 +188,7 @@ namespace Services.Services
             List<StockRevenueModel> revenueInfos = await revenueTask;
             List<StockDividendModel> dividendInfos = await dividendTask;
             List<StockTechInfoModel> techInfos = await techTask;
+            _logger.Information("Getting stock information from MongoDB completed");
             int thisYear = DateTime.Now.Year;
             List<StockEpsModel> epsMatch = epsInfos.Where(x => x.EpsList.Where(y => y.Year == thisYear - 2).Count() == 4 && (x.EpsList.Where(y => y.Year == thisYear - 1 && y.Quarter < 4).Sum(y => y.Eps) >= x.EpsList.Where(y => y.Year == thisYear - 2).Sum(y => y.Eps))).ToList();
             List<string> revenueMatch = revenueInfos.Where(x => x.RevenueList.Where(y => y.Year == thisYear - 1 && y.Month > 9).Count() == 3 && x.RevenueList.Where(y => y.Year == thisYear - 2 && y.Month > 9).Count() == 3 && (x.RevenueList.Where(y => y.Year == thisYear - 1 && y.Month > 9).Sum(y => y.Revenue) > x.RevenueList.Where(y => y.Year == thisYear - 2 && y.Month > 9).Sum(y => y.Revenue))).Select(x => x.StockId).ToList();
