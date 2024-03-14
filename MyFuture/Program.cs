@@ -21,8 +21,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((hostingContext, loggerConfig) => loggerConfig.ReadFrom.Configuration(hostingContext.Configuration));
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-//builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IStockService, StockService>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddScoped<ICacheStockTech, CacheStockTech>();
@@ -45,11 +45,11 @@ builder.Services.AddCors(options =>
 #endregion
 var app = builder.Build();
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-//    app.UseSwagger();
-//    app.UseSwaggerUI();
-//}
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseHttpsRedirection();
 
