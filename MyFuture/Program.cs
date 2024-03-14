@@ -6,7 +6,6 @@ using Repositories.Repositories;
 using Serilog;
 using Services.Interfaces;
 using Services.Services;
-using ILogger = Serilog.ILogger;
 
 var builder = WebApplication.CreateBuilder(args);
 

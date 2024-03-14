@@ -230,7 +230,6 @@ namespace Services.Services
                     throw new Exception($"Stock: {i.StockId} with {ex.ToString()}");
                 }
             }
-
             return results;
         }
     }
