@@ -6,6 +6,7 @@ using Repositories.Repositories;
 using Serilog;
 using Services.Interfaces;
 using Services.Services;
+using ILogger = Serilog.ILogger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,7 +45,6 @@ builder.Services.AddCors(options =>
 });
 #endregion
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
