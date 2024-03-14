@@ -8,30 +8,36 @@ using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using System.Collections.ObjectModel;
 using Serilog;
+using Models.Enums;
+using System.Collections.Generic;
 
 namespace Services.Services
 {
     public class StockService : IStockService
     {
-        // private readonly IMemoryCache _memoryCache;
+        private readonly IMemoryCache _memoryCache;
         private readonly IMongoDbService _mongoDbservice;
         private MongodbConfigModel _mongodbConfig;
         private readonly ILogger _logger;
-        public StockService(/* IMemoryCache memoryCache,  */IMongoDbService mongoDbService, IConfiguration config, ILogger logger)
+        public StockService(IMemoryCache memoryCache, IMongoDbService mongoDbService, IConfiguration config, ILogger logger)
         {
-            // _memoryCache = memoryCache;
+            _memoryCache = memoryCache;
             _mongoDbservice = mongoDbService;
             _mongodbConfig = config.GetSection("Mongodb").Get<MongodbConfigModel>();
             _logger = logger;
         }
         public async Task<List<StockTechInfoModel>> GetJumpEmptyStocks()
         {
-            List <StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(JumpEmptyStrategy);
+            if (_memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetJumpEmptyStocks.ToString(), out var cacheResult)) return cacheResult;
+            List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(JumpEmptyStrategy);
+            _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetJumpEmptyStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
             return selectedStocks;
         }
         public async Task<List<StockTechInfoModel>> GetBullishPullbackStocks()
         {
+            if (_memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetBullishPullbackStocks.ToString(), out var cacheResult)) return cacheResult;
             List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(BullishPullbackStrategy);
+            _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetBullishPullbackStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
             return selectedStocks;
         }
         private async Task<List<StockTechInfoModel>> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy)
@@ -138,6 +144,7 @@ namespace Services.Services
 
         public async Task<List<StockFinanceInfoModel>> GetFinanceIncreasingStocks()
         {
+            if (_memoryCache.TryGetValue<List<StockFinanceInfoModel>>(EStrategy.GetFinanceIncreasingStocks.ToString(), out var cacheResult)) return cacheResult;
             var database = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name);
             var epsCollection = database.GetCollection<StockEpsModel>(EnumCollection.EPS.ToString());
             var revenueCollection = database.GetCollection<StockRevenueModel>(EnumCollection.Revenue.ToString());
@@ -170,10 +177,12 @@ namespace Services.Services
 
                 }
             }
+            _memoryCache.Set<List<StockFinanceInfoModel>>(EStrategy.GetFinanceIncreasingStocks.ToString(), results, TimeSpan.FromMinutes(10));
             return results;
         }
         public async Task<List<StockBaseModel>> GetHighYieldStocks()
         {
+            if (_memoryCache.TryGetValue<List<StockBaseModel>>(EStrategy.GetHighYieldStocks.ToString(), out var cacheResult)) return cacheResult;
             _logger.Information("Getting stock information from MongoDB started");
             var database = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name);
             var epsCollection = database.GetCollection<StockEpsModel>(EnumCollection.EPS.ToString());
@@ -230,6 +239,7 @@ namespace Services.Services
                     throw new Exception($"Stock: {i.StockId} with {ex.ToString()}");
                 }
             }
+            _memoryCache.Set<List<StockBaseModel>>(EStrategy.GetHighYieldStocks.ToString(), results, TimeSpan.FromMinutes(10));
             return results;
         }
     }
