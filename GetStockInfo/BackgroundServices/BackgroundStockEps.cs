@@ -13,7 +13,6 @@ namespace GetStockInfo.BackgroundServices
             _logger = logger;
             _cacheStockEps = cacheStockEps;
         }
-
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
@@ -27,7 +26,7 @@ namespace GetStockInfo.BackgroundServices
                 {
                     _logger.Error(ex.ToString());
                 }
-                await Task.Delay(TimeSpan.FromMinutes(60));
+                await Task.Delay(TimeSpan.FromHours(2));
             }
         }
     }

@@ -26,7 +26,7 @@ namespace GetStockInfo.BackgroundServices
                 {
                     _logger.Error(ex.ToString());
                 }
-                await Task.Delay(TimeSpan.FromMinutes(60));
+                await Task.Delay(TimeSpan.FromHours(2));
             }
         }
     }
