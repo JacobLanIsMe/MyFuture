@@ -44,6 +44,21 @@ namespace MyFuture.Controllers
             }
             return result;
         }
+        [HttpGet("GetOrganizedStocks")]
+        public async Task<ApiDataResponseModel> GetOrganizedStocks()
+        {
+            ApiDataResponseModel result = new ApiDataResponseModel();
+            try
+            {
+                result.Data = await _stockService.GetOrganizedStocks();
+                result.SetSuccess();
+            }
+            catch (Exception ex)
+            {
+                result.SetError(ex.Message, ex.ToString());
+            }
+            return result;
+        }
         [HttpGet("GetFinanceIncreasingStocks")]
         public async Task<ApiDataResponseModel> GetFinanceIncreasingStocks()
         {

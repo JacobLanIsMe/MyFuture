@@ -40,6 +40,13 @@ namespace Services.Services
             _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetBullishPullbackStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
             return selectedStocks;
         }
+        public async Task<List<StockTechInfoModel>> GetOrganizedStocks()
+        {
+            if (_memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetOrganizedStocks.ToString(), out var cacheResult)) return cacheResult;
+            List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(OrganizedStrategy);
+            _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetOrganizedStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
+            return selectedStocks;
+        }
         private async Task<List<StockTechInfoModel>> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy)
         {
             var techCollection = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name).GetCollection<StockTechInfoModel>(EnumCollection.Tech.ToString());
@@ -74,9 +81,6 @@ namespace Services.Services
             }
             return results;
         }
-
-
-
         private delegate bool GetStocksBySpecificStrategy(List<StockTechDetailModel> stockDetails);
         #region JumpEmpty
         private bool JumpEmptyStrategy(List<StockTechDetailModel> stockDetails)
@@ -138,6 +142,22 @@ namespace Services.Services
             //    return true;
             //}
 
+            return false;
+        }
+        #endregion
+        #region Organized
+        private bool OrganizedStrategy(List<StockTechDetailModel> stockDetails)
+        {
+            var ma5Today = stockDetails.Take(5).Average(x => x.c);
+            var ma5Yesterday = stockDetails.Skip(1).Take(5).Average(x => x.c);
+            var ma10Today = stockDetails.Take(10).Average(x => x.c);
+            var ma10Yesterday = stockDetails.Skip(1).Take(10).Average(x => x.c);
+            var ma20Today = stockDetails.Take(20).Average(x => x.c);
+            var ma20Yesterday = stockDetails.Skip(1).Take(20).Average(x => x.c);
+            if (ma5Today > ma5Yesterday && ma10Today > ma10Yesterday && ma20Today > ma20Yesterday && ma5Today > ma10Today && ma10Today > ma20Today && ma5Today / ma20Today <= 1.01)
+            {
+                return true;
+            }
             return false;
         }
         #endregion

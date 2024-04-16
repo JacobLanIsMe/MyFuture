@@ -10,6 +10,7 @@ namespace Models.Enums
     {
         GetJumpEmptyStocks,
         GetBullishPullbackStocks,
+        GetOrganizedStocks,
         GetFinanceIncreasingStocks,
         GetHighYieldStocks
     }
