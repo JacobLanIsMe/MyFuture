@@ -39,9 +39,8 @@ namespace Caches.Caches
                     List<StockTechDetailModel> stockDetails = new List<StockTechDetailModel>();
                     if (!responseMsg.IsSuccessStatusCode) throw new Exception($"Cannot receive successful response when getting the tech of stock {stockId}");
                     var data = await responseMsg.Content.ReadAsStringAsync();
-                    detail = data.Split("\"ta\":")[1].Split(",\"ex\"")[0];
+                    detail = data.Split("\"ta\":")[1].Split("});")[0].Split(",\"ex\"")[0];
                     name = data.Split("\"name\":\"")[1].Split('\"')[0];
-                    
                     stockDetails = JsonSerializer.Deserialize<List<StockTechDetailModel>>(detail);
                     stock.StockDetails = stockDetails;
                     stock.Name = name;

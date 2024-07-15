@@ -48,7 +48,19 @@ namespace MongoDbProvider
             var collection = mongoClient.GetDatabase("MyFuture").GetCollection<T>(collectionName);
             var filter = Builders<T>.Filter.Empty;
             await collection.DeleteManyAsync(filter);
-            await collection.InsertManyAsync(values);
+            int batchSize = 100;
+            int totalBatches = (values.Count + batchSize - 1) / batchSize;
+            List<List<T>> batches = new List<List<T>>();
+            for (int i = 0; i < totalBatches; i++)
+            {
+                var batch = values.Skip(i * batchSize).Take(batchSize).ToList();
+                batches.Add(batch);
+            }
+            Parallel.ForEach(batches, batch =>
+            {
+                collection.InsertMany(batch);
+            });
+            
         }
     }
 }
