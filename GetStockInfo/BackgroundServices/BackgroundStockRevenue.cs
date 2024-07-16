@@ -15,18 +15,14 @@ namespace GetStockInfo.BackgroundServices
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                try
-                {
-                    //取得所有的 StockInfo，並寫入 Cache
-                    await _cacheStockRevenue.SetStockRevenueCache();
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error(ex.ToString());
-                }
-                await Task.Delay(TimeSpan.FromHours(2));
+                //取得所有的 StockInfo，並寫入 Cache
+                await _cacheStockRevenue.SetStockRevenueCache();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex.ToString());
             }
         }
     }
