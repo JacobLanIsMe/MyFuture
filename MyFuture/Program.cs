@@ -8,7 +8,11 @@ using Services.Interfaces;
 using Services.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-
+string environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true)
+    .Build();
 // Add services to the container.
 
 #region Redis
