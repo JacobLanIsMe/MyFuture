@@ -22,10 +22,7 @@ var configuration = new ConfigurationBuilder()
 //    options.InstanceName = "RedisTest";
 //});
 #endregion
-Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
-                .CreateLogger();
-builder.Services.AddSingleton(Log.Logger);
+builder.Host.UseSerilog((hostingContext, loggerConfig) => loggerConfig.ReadFrom.Configuration(hostingContext.Configuration));
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
