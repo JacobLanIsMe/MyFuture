@@ -25,8 +25,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IStockService, StockService>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
-builder.Services.AddScoped<ICacheStockTech, CacheStockTech>();
-builder.Services.AddScoped<ICacheStockEps, CacheStockEps>();
 builder.Services.AddScoped<IMongoDbService, MongoDbService>();
 builder.Services.AddMemoryCache();
 
