@@ -51,7 +51,7 @@ namespace Caches.Caches
             try
             {
                 _logger.Information("Writing stock revenue into Mongodb started");
-                await _mongoDbService.DeleteAndInsertManyData<StockRevenueModel>("Revenue", results);
+                await _mongoDbService.DropAndInsertManyData<StockRevenueModel>("Revenue", results);
                 _logger.Information("Writing stock revenue into Mongodb completed");
             }
             catch(Exception ex)

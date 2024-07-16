@@ -51,7 +51,7 @@ namespace Caches.Caches
             try
             {
                 _logger.Information("Writing stock EPS into Mongodb started");
-                await _mongoDbService.DeleteAndInsertManyData<StockEpsModel>("EPS", results);
+                await _mongoDbService.DropAndInsertManyData<StockEpsModel>("EPS", results);
                 _logger.Information("Writing stock EPS into Mongodb completed");
             }
             catch(Exception ex)

@@ -42,12 +42,12 @@ namespace MongoDbProvider
             var filter = Builders<T>.Filter.Empty;
             return await collection.Find(filter).ToListAsync();
         }
-        public async Task DeleteAndInsertManyData<T>(string collectionName, List<T> values)
+        public async Task DropAndInsertManyData<T>(string collectionName, List<T> values)
         {
             MongoClient mongoClient = GetMongoClient();
-            var collection = mongoClient.GetDatabase("MyFuture").GetCollection<T>(collectionName);
-            var filter = Builders<T>.Filter.Empty;
-            await collection.DeleteManyAsync(filter);
+            var db = mongoClient.GetDatabase("MyFuture");
+            db.DropCollection(collectionName);
+            var collection = db.GetCollection<T>(collectionName);
             int batchSize = 100;
             int totalBatches = (values.Count + batchSize - 1) / batchSize;
             List<List<T>> batches = new List<List<T>>();

@@ -24,8 +24,7 @@ namespace Caches.Caches
         }
         public async Task SetStockTechCache()
         {
-            //List<string> stockIds = _stockRepository.GetStockIds(); // 取得所有的 stockId
-            List<string> stockIds = new List<string> { "2330" };
+            List<string> stockIds = _stockRepository.GetStockIds(); // 取得所有的 stockId
             HttpClient client = _httpClientFactory.CreateClient();
             List<StockTechInfoModel> results = new List<StockTechInfoModel>();
             foreach (var stockId in stockIds)
@@ -58,7 +57,7 @@ namespace Caches.Caches
             try
             {
                 _logger.Information("Writing stock tech into Mongodb started");
-                await _mongoDbService.DeleteAndInsertManyData<StockTechInfoModel>("Tech", results);
+                await _mongoDbService.DropAndInsertManyData<StockTechInfoModel>("Tech", results);
                 _logger.Information("Writing stock tech into Mongodb completed");
             }
             catch(Exception ex)
