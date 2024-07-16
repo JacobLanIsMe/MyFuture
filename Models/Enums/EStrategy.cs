@@ -11,6 +11,7 @@ namespace Models.Enums
         GetJumpEmptyStocks,
         GetBullishPullbackStocks,
         GetOrganizedStocks,
+        GetSandwichStocks,
         GetFinanceIncreasingStocks,
         GetHighYieldStocks
     }

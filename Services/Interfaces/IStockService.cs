@@ -12,6 +12,7 @@ namespace Services.Interfaces
         Task<List<StockTechInfoModel>> GetJumpEmptyStocks();
         Task<List<StockTechInfoModel>> GetBullishPullbackStocks();
         Task<List<StockTechInfoModel>> GetOrganizedStocks();
+        Task<List<StockTechInfoModel>> GetSandwichStocks();
         Task<List<StockFinanceInfoModel>> GetFinanceIncreasingStocks();
         Task<List<StockBaseModel>> GetHighYieldStocks();
     }

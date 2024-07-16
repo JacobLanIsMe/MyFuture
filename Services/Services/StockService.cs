@@ -47,6 +47,13 @@ namespace Services.Services
             _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetOrganizedStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
             return selectedStocks;
         }
+        public async Task<List<StockTechInfoModel>> GetSandwichStocks()
+        {
+            if (_memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetSandwichStocks.ToString(), out var cacheResult)) return cacheResult;
+            List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(SandwichStrategy);
+            _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetSandwichStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
+            return selectedStocks;
+        }
         private async Task<List<StockTechInfoModel>> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy)
         {
             var techCollection = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name).GetCollection<StockTechInfoModel>(EnumCollection.Tech.ToString());
@@ -161,7 +168,21 @@ namespace Services.Services
             return false;
         }
         #endregion
-
+        #region Sandwich
+        private bool SandwichStrategy(List<StockTechDetailModel> stockDetails)
+        {
+            StockTechDetailModel today = stockDetails.First();
+            StockTechDetailModel yesterday = stockDetails.Skip(1).First();
+            StockTechDetailModel theDayBeforeYesterday = stockDetails.Skip(2).First();
+            double theDayBeforeTheDayBeforeYesterdayClose = stockDetails.Skip(3).First().c;
+            double theDayBeforeYesterdayMV5 = stockDetails.Skip(2).Take(5).Average(x => x.v);
+            if (today.c > today.o && yesterday.c < yesterday.o && theDayBeforeYesterday.c > theDayBeforeYesterday.o && today.c > yesterday.h && yesterday.h < theDayBeforeYesterday.h && theDayBeforeYesterday.v / theDayBeforeYesterdayMV5 > 3 && today.v > yesterday.v && yesterday.v < theDayBeforeYesterday.v && today.v < theDayBeforeYesterday.v && theDayBeforeYesterday.c / theDayBeforeTheDayBeforeYesterdayClose > 1.05 )
+            {
+                return true;
+            }
+            return false;
+        }
+        #endregion
         public async Task<List<StockFinanceInfoModel>> GetFinanceIncreasingStocks()
         {
             if (_memoryCache.TryGetValue<List<StockFinanceInfoModel>>(EStrategy.GetFinanceIncreasingStocks.ToString(), out var cacheResult)) return cacheResult;
