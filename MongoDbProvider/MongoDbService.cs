@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace MongoDbProvider
@@ -40,7 +41,23 @@ namespace MongoDbProvider
         public async Task<List<T>> GetAllData<T>(IMongoCollection<T> collection)
         {
             var filter = Builders<T>.Filter.Empty;
-            return await collection.Find(filter).ToListAsync();
+            int batchSize = 100;
+            int skip = 0;
+            List<T> data = new List<T>();
+            while (true)
+            {
+                var documents = await collection.Find(filter)
+                                                 .Skip(skip)
+                                                 .Limit(batchSize)
+                                                 .ToListAsync();
+                if (documents.Count == 0)
+                {
+                    break;
+                }
+                data.AddRange(documents);
+                skip += batchSize;
+            }
+            return data;
         }
         public async Task DropAndInsertManyData<T>(string collectionName, List<T> values)
         {
