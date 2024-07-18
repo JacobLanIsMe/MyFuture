@@ -48,8 +48,7 @@ namespace Services.Services
         }
         private async Task<List<StockTechInfoModel>> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy, DateTime selectedDate)
         {
-            List<StockTechInfoModel> allData;
-            _memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetAllTechData.ToString(), out allData);
+            _memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetAllTechData.ToString(), out List<StockTechInfoModel> allData);
             if (allData != null)
             {
                 _logger.Information("Tech data is retrieved from Cache.");
