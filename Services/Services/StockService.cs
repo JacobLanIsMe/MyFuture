@@ -58,10 +58,10 @@ namespace Services.Services
             {
                 var techCollection = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name).GetCollection<StockTechInfoModel>(EnumCollection.Tech.ToString());
                 allData = await _mongoDbservice.GetAllData<StockTechInfoModel>(techCollection);
-                _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetAllTechData.ToString(), allData, TimeSpan.FromMinutes(10));
             }
             if (allData != null)
             {
+                _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetAllTechData.ToString(), allData, TimeSpan.FromMinutes(10));
                 _logger.Information("Tech data is retrieved from DB.");
             }
             else
