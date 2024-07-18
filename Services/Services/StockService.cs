@@ -55,6 +55,7 @@ namespace Services.Services
             }
             else
             {
+                if (_mongodbConfig == null) throw new Exception("Can not find the MongoDb config.");
                 var techCollection = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name).GetCollection<StockTechInfoModel>(EnumCollection.Tech.ToString());
                 allData = await _mongoDbservice.GetAllData<StockTechInfoModel>(techCollection);
                 if (allData != null && allData.Any())
