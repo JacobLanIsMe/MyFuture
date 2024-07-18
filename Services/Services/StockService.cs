@@ -57,15 +57,15 @@ namespace Services.Services
             {
                 var techCollection = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name).GetCollection<StockTechInfoModel>(EnumCollection.Tech.ToString());
                 allData = await _mongoDbservice.GetAllData<StockTechInfoModel>(techCollection);
-            }
-            if (allData != null)
-            {
-                _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetAllTechData.ToString(), allData, TimeSpan.FromMinutes(10));
-                _logger.Information("Tech data is retrieved from DB.");
-            }
-            else
-            {
-                throw new Exception("There is no tech data.");
+                if (allData != null && allData.Any())
+                {
+                    _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetAllTechData.ToString(), allData, TimeSpan.FromMinutes(10));
+                    _logger.Information("Tech data is retrieved from DB.");
+                }
+                else
+                {
+                    throw new Exception("There is no tech data.");
+                }
             }
             int date = int.TryParse(selectedDate.ToString("yyyyMMdd"), out date) ? date : int.Parse(DateTime.Today.ToString("yyyyMMdd"));
             List<StockTechInfoModel> results = new List<StockTechInfoModel>();
