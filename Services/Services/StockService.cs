@@ -26,44 +26,45 @@ namespace Services.Services
             _mongodbConfig = config.GetSection("Mongodb").Get<MongodbConfigModel>();
             _logger = logger;
         }
-        public async Task<List<StockTechInfoModel>> GetJumpEmptyStocks()
+        public async Task<List<StockTechInfoModel>> GetJumpEmptyStocks(DateTime selectedDate)
         {
             if (_memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetJumpEmptyStocks.ToString(), out var cacheResult)) return cacheResult;
-            List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(JumpEmptyStrategy);
+            List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(JumpEmptyStrategy, selectedDate);
             _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetJumpEmptyStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
             return selectedStocks;
         }
-        public async Task<List<StockTechInfoModel>> GetBullishPullbackStocks()
+        public async Task<List<StockTechInfoModel>> GetBullishPullbackStocks(DateTime selectedDate)
         {
             if (_memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetBullishPullbackStocks.ToString(), out var cacheResult)) return cacheResult;
-            List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(BullishPullbackStrategy);
+            List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(BullishPullbackStrategy, selectedDate);
             _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetBullishPullbackStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
             return selectedStocks;
         }
-        public async Task<List<StockTechInfoModel>> GetOrganizedStocks()
+        public async Task<List<StockTechInfoModel>> GetOrganizedStocks(DateTime selectedDate)
         {
             if (_memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetOrganizedStocks.ToString(), out var cacheResult)) return cacheResult;
-            List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(OrganizedStrategy);
+            List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(OrganizedStrategy, selectedDate);
             _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetOrganizedStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
             return selectedStocks;
         }
-        public async Task<List<StockTechInfoModel>> GetSandwichStocks()
+        public async Task<List<StockTechInfoModel>> GetSandwichStocks(DateTime selectedDate)
         {
             if (_memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetSandwichStocks.ToString(), out var cacheResult)) return cacheResult;
-            List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(SandwichStrategy);
+            List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(SandwichStrategy, selectedDate);
             _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetSandwichStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
             return selectedStocks;
         }
-        private async Task<List<StockTechInfoModel>> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy)
+        private async Task<List<StockTechInfoModel>> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy, DateTime selectedDate)
         {
             var techCollection = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name).GetCollection<StockTechInfoModel>(EnumCollection.Tech.ToString());
             List<StockTechInfoModel> allData = await _mongoDbservice.GetAllData<StockTechInfoModel>(techCollection);
             List<StockTechInfoModel> results = new List<StockTechInfoModel>();
+            int date = int.TryParse(selectedDate.ToString("yyyyMMdd"), out date) ? date : int.Parse(DateTime.Today.ToString("yyyyMMdd"));
             foreach (var i in allData)
             {
                 try
                 {
-                    List<StockTechDetailModel> stockDetails = i.StockDetails.OrderByDescending(x => x.t).ToList();
+                    List<StockTechDetailModel> stockDetails = i.StockDetails.Where(x => x.t <= date).OrderByDescending(x => x.t).ToList();
                     var mv5 = stockDetails.Take(5).Select(x => x.v).Average();
                     double bias60 = default;
                     if (stockDetails.Count >= 60)

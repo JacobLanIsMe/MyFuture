@@ -15,12 +15,12 @@ namespace MyFuture.Controllers
             _stockService = stockService;
         }
         [HttpGet("GetJumpEmptyStocks")]
-        public async Task<ApiDataResponseModel> GetJumpEmptyStocks(InputModel input)
+        public async Task<ApiDataResponseModel> GetJumpEmptyStocks(DateTime selectedDate)
         {
             ApiDataResponseModel result = new ApiDataResponseModel();
             try
             {
-                result.Data = await _stockService.GetJumpEmptyStocks();
+                result.Data = await _stockService.GetJumpEmptyStocks(selectedDate);
                 result.SetSuccess();
             }
             catch (Exception ex)
@@ -30,12 +30,12 @@ namespace MyFuture.Controllers
             return result;
         }
         [HttpGet("GetBullishPullbackStocks")]
-        public async Task<ApiDataResponseModel> GetBullishPullbackStocks()
+        public async Task<ApiDataResponseModel> GetBullishPullbackStocks(DateTime selectedDate)
         {
             ApiDataResponseModel result = new ApiDataResponseModel();
             try
             {
-                result.Data = await _stockService.GetBullishPullbackStocks();
+                result.Data = await _stockService.GetBullishPullbackStocks(selectedDate);
                 result.SetSuccess();
             }
             catch (Exception ex)
@@ -45,12 +45,12 @@ namespace MyFuture.Controllers
             return result;
         }
         [HttpGet("GetOrganizedStocks")]
-        public async Task<ApiDataResponseModel> GetOrganizedStocks()
+        public async Task<ApiDataResponseModel> GetOrganizedStocks(DateTime selectedDate)
         {
             ApiDataResponseModel result = new ApiDataResponseModel();
             try
             {
-                result.Data = await _stockService.GetOrganizedStocks();
+                result.Data = await _stockService.GetOrganizedStocks(selectedDate);
                 result.SetSuccess();
             }
             catch (Exception ex)
@@ -60,12 +60,12 @@ namespace MyFuture.Controllers
             return result;
         }
         [HttpGet("GetSandwichStocks")]
-        public async Task<ApiDataResponseModel> GetSandwichStocks()
+        public async Task<ApiDataResponseModel> GetSandwichStocks(DateTime selectedDate)
         {
             ApiDataResponseModel result = new ApiDataResponseModel();
             try
             {
-                result.Data = await _stockService.GetSandwichStocks();
+                result.Data = await _stockService.GetSandwichStocks(selectedDate);
                 result.SetSuccess();
             }
             catch(Exception ex)
