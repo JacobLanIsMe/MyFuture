@@ -15,7 +15,7 @@ namespace MyFuture.Controllers
             _stockService = stockService;
         }
         [HttpGet("GetJumpEmptyStocks")]
-        public async Task<ApiDataResponseModel> GetJumpEmptyStocks()
+        public async Task<ApiDataResponseModel> GetJumpEmptyStocks(InputModel input)
         {
             ApiDataResponseModel result = new ApiDataResponseModel();
             try
