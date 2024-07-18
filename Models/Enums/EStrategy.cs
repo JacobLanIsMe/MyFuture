@@ -8,6 +8,7 @@ namespace Models.Enums
 {
     public enum EStrategy
     {
+        GetAllTechData,
         GetJumpEmptyStocks,
         GetBullishPullbackStocks,
         GetOrganizedStocks,

@@ -28,38 +28,37 @@ namespace Services.Services
         }
         public async Task<List<StockTechInfoModel>> GetJumpEmptyStocks(DateTime selectedDate)
         {
-            if (_memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetJumpEmptyStocks.ToString(), out var cacheResult)) return cacheResult;
             List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(JumpEmptyStrategy, selectedDate);
-            _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetJumpEmptyStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
             return selectedStocks;
         }
         public async Task<List<StockTechInfoModel>> GetBullishPullbackStocks(DateTime selectedDate)
         {
-            if (_memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetBullishPullbackStocks.ToString(), out var cacheResult)) return cacheResult;
             List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(BullishPullbackStrategy, selectedDate);
-            _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetBullishPullbackStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
             return selectedStocks;
         }
         public async Task<List<StockTechInfoModel>> GetOrganizedStocks(DateTime selectedDate)
         {
-            if (_memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetOrganizedStocks.ToString(), out var cacheResult)) return cacheResult;
             List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(OrganizedStrategy, selectedDate);
-            _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetOrganizedStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
             return selectedStocks;
         }
         public async Task<List<StockTechInfoModel>> GetSandwichStocks(DateTime selectedDate)
         {
-            if (_memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetSandwichStocks.ToString(), out var cacheResult)) return cacheResult;
             List<StockTechInfoModel> selectedStocks = await GetStockBySpecificStrategy(SandwichStrategy, selectedDate);
-            _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetSandwichStocks.ToString(), selectedStocks, TimeSpan.FromMinutes(10));
             return selectedStocks;
         }
         private async Task<List<StockTechInfoModel>> GetStockBySpecificStrategy(GetStocksBySpecificStrategy strategy, DateTime selectedDate)
         {
-            var techCollection = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name).GetCollection<StockTechInfoModel>(EnumCollection.Tech.ToString());
-            List<StockTechInfoModel> allData = await _mongoDbservice.GetAllData<StockTechInfoModel>(techCollection);
-            List<StockTechInfoModel> results = new List<StockTechInfoModel>();
+            List<StockTechInfoModel> allData;
+            _memoryCache.TryGetValue<List<StockTechInfoModel>>(EStrategy.GetAllTechData.ToString(), out allData);
+            if (allData == null)
+            {
+                var techCollection = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name).GetCollection<StockTechInfoModel>(EnumCollection.Tech.ToString());
+                allData = await _mongoDbservice.GetAllData<StockTechInfoModel>(techCollection);
+                _memoryCache.Set<List<StockTechInfoModel>>(EStrategy.GetAllTechData.ToString(), allData, TimeSpan.FromMinutes(10));
+            }
+            if (allData == null) throw new Exception("There is no tech data.");
             int date = int.TryParse(selectedDate.ToString("yyyyMMdd"), out date) ? date : int.Parse(DateTime.Today.ToString("yyyyMMdd"));
+            List<StockTechInfoModel> results = new List<StockTechInfoModel>();
             foreach (var i in allData)
             {
                 try
