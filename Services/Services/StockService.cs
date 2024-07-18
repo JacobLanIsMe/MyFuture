@@ -17,13 +17,12 @@ namespace Services.Services
     {
         private readonly IMemoryCache _memoryCache;
         private readonly IMongoDbService _mongoDbservice;
-        private MongodbConfigModel _mongodbConfig;
+        private readonly string _databaseName = "MyFuture";
         private readonly ILogger _logger;
-        public StockService(IMemoryCache memoryCache, IMongoDbService mongoDbService, IConfiguration config, ILogger logger)
+        public StockService(IMemoryCache memoryCache, IMongoDbService mongoDbService, ILogger logger)
         {
             _memoryCache = memoryCache;
             _mongoDbservice = mongoDbService;
-            _mongodbConfig = config.GetSection("Mongodb").Get<MongodbConfigModel>();
             _logger = logger;
         }
         public async Task<List<StockTechInfoModel>> GetJumpEmptyStocks(DateTime selectedDate)
@@ -55,8 +54,7 @@ namespace Services.Services
             }
             else
             {
-                if (_mongodbConfig == null) throw new Exception("Can not find the MongoDb config.");
-                var techCollection = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name).GetCollection<StockTechInfoModel>(EnumCollection.Tech.ToString());
+                var techCollection = _mongoDbservice.GetMongoClient().GetDatabase(_databaseName).GetCollection<StockTechInfoModel>(EnumCollection.Tech.ToString());
                 allData = await _mongoDbservice.GetAllData<StockTechInfoModel>(techCollection);
                 if (allData != null && allData.Any())
                 {
@@ -197,7 +195,7 @@ namespace Services.Services
         public async Task<List<StockFinanceInfoModel>> GetFinanceIncreasingStocks()
         {
             if (_memoryCache.TryGetValue<List<StockFinanceInfoModel>>(EStrategy.GetFinanceIncreasingStocks.ToString(), out var cacheResult)) return cacheResult;
-            var database = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name);
+            var database = _mongoDbservice.GetMongoClient().GetDatabase(_databaseName);
             var epsCollection = database.GetCollection<StockEpsModel>(EnumCollection.EPS.ToString());
             var revenueCollection = database.GetCollection<StockRevenueModel>(EnumCollection.Revenue.ToString());
             var getEpsTask = _mongoDbservice.GetAllData<StockEpsModel>(epsCollection);
@@ -236,7 +234,7 @@ namespace Services.Services
         {
             if (_memoryCache.TryGetValue<List<StockBaseModel>>(EStrategy.GetHighYieldStocks.ToString(), out var cacheResult)) return cacheResult;
             _logger.Information("Getting stock information from MongoDB started");
-            var database = _mongoDbservice.GetMongoClient().GetDatabase(_mongodbConfig.Name);
+            var database = _mongoDbservice.GetMongoClient().GetDatabase(_databaseName);
             var epsCollection = database.GetCollection<StockEpsModel>(EnumCollection.EPS.ToString());
             var revenueCollection = database.GetCollection<StockRevenueModel>(EnumCollection.Revenue.ToString());
             var dividendCollection = database.GetCollection<StockDividendModel>(EnumCollection.Dividend.ToString());
