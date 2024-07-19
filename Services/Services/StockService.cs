@@ -139,26 +139,21 @@ namespace Services.Services
         #region BullishPullback
         private bool BullishPullbackStrategy(List<StockTechDetailModel> stockDetails)
         {
-            var last40Days = stockDetails.Take(40).ToList();
-            double topClose = last40Days.Select(x => x.c).Max(); // 找到近40天的最高收盤價
-            int topDayIndex = last40Days.FindIndex(x => x.c == topClose); // 找到近40天的最高收盤價的位置
-            //double lastTopClose = stockDetails.Skip(topDayIndex + 1).Take(20).Select(x => x.c).Max(); // 找到前一個峰值的收盤價
-            //int lastTopDayIndex = stockDetails.Skip(topDayIndex + 1).Take(20).ToList().FindIndex(x => x.c == lastTopClose); // 找出第二個峰值的位置
-            double bottomClose = stockDetails.Take(topDayIndex).Select(x => x.c).Min(); // 找到最近的底部收盤價
-            //double lastBottomClose = stockDetails.Skip(topDayIndex + 1).Take(lastTopDayIndex).Select(x => x.c).Min(); // 找出兩個峰值間的最低值
-            double lastBottomClose = stockDetails.Skip(topDayIndex + 1).Take(20).Select(x => x.c).Min(); // 找出近期高點前的 20 天的最低值
-            var mh5 = stockDetails.Take(5).Select(x => x.c).Max(); // 找出最近五日收盤價的最高點
-            var ml5 = stockDetails.Take(5).Select(x => x.c).Min(); // 找出最近五日收盤價的最低點
-            if (bottomClose >= lastBottomClose && mh5 / ml5 <= 1.02)
+            bool isMatch = false;
+            var today = stockDetails.First();
+            for (int i = 1; i <= 40; i++)
             {
-                return true;
+                var redBarDay = stockDetails.Skip(i).First();
+                var beforeRedBarDay = stockDetails.Skip(i + 1).First();
+                var redBarDayMv5 = stockDetails.Skip(i).Take(5).Average(x => x.v);
+                double basePrice = redBarDay.l < beforeRedBarDay.c ? redBarDay.l : beforeRedBarDay.c;
+                if (redBarDay.c / beforeRedBarDay.c >= 1.06 && redBarDay.v / redBarDayMv5 >= 2 && today.c / basePrice <= 1.02 && today.c >= basePrice)
+                {
+                    isMatch = true;
+                    break;
+                }
             }
-            //if (topClose > lastTopClose && bottomClose >= lastBottomClose && mh5/ml5 <= 1.02)
-            //{
-            //    return true;
-            //}
-
-            return false;
+            return isMatch;
         }
         #endregion
         #region Organized
