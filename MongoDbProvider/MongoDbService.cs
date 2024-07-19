@@ -42,7 +42,7 @@ namespace MongoDbProvider
         public async Task<List<T>> GetAllData<T>(IMongoCollection<T> collection)
         {
             var filter = Builders<T>.Filter.Empty;
-            int batchSize = 200;
+            int batchSize = 100;
             long count = await collection.CountDocumentsAsync(filter);
             int numBatches = (int)Math.Ceiling((double)count / batchSize);
             ConcurrentBag<T> data = new ConcurrentBag<T>();
