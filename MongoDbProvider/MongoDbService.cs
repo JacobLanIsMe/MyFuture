@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -41,23 +42,26 @@ namespace MongoDbProvider
         public async Task<List<T>> GetAllData<T>(IMongoCollection<T> collection)
         {
             var filter = Builders<T>.Filter.Empty;
-            int batchSize = 100;
-            int skip = 0;
-            List<T> data = new List<T>();
-            while (true)
+            int batchSize = 200;
+            long count = await collection.CountDocumentsAsync(filter);
+            int numBatches = (int)Math.Ceiling((double)count / batchSize);
+            ConcurrentBag<T> data = new ConcurrentBag<T>();
+            Parallel.ForEach(Partitioner.Create(0, numBatches), range =>
             {
-                var documents = await collection.Find(filter)
-                                                 .Skip(skip)
-                                                 .Limit(batchSize)
-                                                 .ToListAsync();
-                if (documents.Count == 0)
+                for (int i = range.Item1; i < range.Item2; i++)
                 {
-                    break;
+                    var documents = collection.Find(filter)
+                                              .Skip(i * batchSize)
+                                              .Limit(batchSize)
+                                              .ToList();
+
+                    foreach (var doc in documents)
+                    {
+                        data.Add(doc);
+                    }
                 }
-                data.AddRange(documents);
-                skip += batchSize;
-            }
-            return data;
+            });
+            return data.ToList();
         }
         public async Task DropAndInsertManyData<T>(string collectionName, List<T> values)
         {
