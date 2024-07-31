@@ -180,7 +180,7 @@ namespace Services.Services
             StockTechDetailModel theDayBeforeYesterday = stockDetails.Skip(2).First();
             double theDayBeforeTheDayBeforeYesterdayClose = stockDetails.Skip(3).First().c;
             double theDayBeforeYesterdayMV5 = stockDetails.Skip(2).Take(5).Average(x => x.v);
-            if (today.c > today.o && yesterday.c < yesterday.o && theDayBeforeYesterday.c > theDayBeforeYesterday.o && today.c > yesterday.h && yesterday.h < theDayBeforeYesterday.h && theDayBeforeYesterday.v / theDayBeforeYesterdayMV5 > 3 && today.v > yesterday.v && yesterday.v < theDayBeforeYesterday.v && today.v < theDayBeforeYesterday.v && theDayBeforeYesterday.c / theDayBeforeTheDayBeforeYesterdayClose > 1.05 )
+            if (today.c > today.o && yesterday.c < yesterday.o && theDayBeforeYesterday.c > theDayBeforeYesterday.o && (today.c > yesterday.h || today.c > theDayBeforeYesterday.h) && yesterday.h < theDayBeforeYesterday.h && theDayBeforeYesterday.v / theDayBeforeYesterdayMV5 > 3 && today.v > yesterday.v && yesterday.v < theDayBeforeYesterday.v && today.v < theDayBeforeYesterday.v && theDayBeforeYesterday.c / theDayBeforeTheDayBeforeYesterdayClose > 1.05 )
             {
                 return true;
             }
